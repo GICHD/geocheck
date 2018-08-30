@@ -25,6 +25,7 @@
 -- V2.3
 --	Add geocheck_**_geo_valid_multipart_polys to identify features with multiple polygons defined for one object.
 --	Remove SRID information in wkt string to simplify copy/paste
+--	Rename intermediary tables with _zint_
 
 -------------------------------
 -- Begin hazard section
@@ -32,8 +33,8 @@
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_hazard_geo_pts CASCADE; 
-create or replace view public.geocheck_hazard_geo_pts as
+drop view if exists public.geocheck_zint_hazard_geo_pts CASCADE; 
+create or replace view public.geocheck_zint_hazard_geo_pts as
 
    select
 	hazard.hazard_guid,
@@ -79,14 +80,14 @@ create or replace view public.geocheck_hazard_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_hazard_geo_polys CASCADE;
-create or replace view public.geocheck_hazard_geo_polys as
+drop view if exists public.geocheck_zint_hazard_geo_polys CASCADE;
+create or replace view public.geocheck_zint_hazard_geo_polys as
 	select hazard_guid, hazard_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select hazard_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_hazard_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_hazard_geo_pts where shapeenum = 'Polygon' 
 		order by hazard_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by hazard_guid, hazard_localid, shape_id, geospatialinfo_guid having count(*) > 2
 	order by hazard_guid;
@@ -96,24 +97,24 @@ drop view if exists public.geocheck_hazard_geo_polys_few_vertices CASCADE;
 create or replace view public.geocheck_hazard_geo_polys_few_vertices as
 	select hazard_guid, hazard_localid, shape_id, count(*) as pointcount
 	from (select hazard_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_hazard_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_hazard_geo_pts where shapeenum = 'Polygon' 
 		order by hazard_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by hazard_guid, hazard_localid, shape_id, geospatialinfo_guid having count(*) < 3
 	order by hazard_guid;
 
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_hazard_geo_valid_polys CASCADE;
-create view public.geocheck_hazard_geo_valid_polys as
-	select hazard_guid, hazard_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_summary(shape) from public.geocheck_hazard_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_hazard_geo_valid_polys CASCADE;
+create view public.geocheck_zint_hazard_geo_valid_polys as
+	select hazard_guid, hazard_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_hazard_geo_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
 drop view if exists public.geocheck_hazard_geo_valid_multipart_polys CASCADE;
 create view public.geocheck_hazard_geo_valid_multipart_polys as
-	select hazard_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11), st_summary(st_collect(shape))
-        from public.geocheck_hazard_geo_polys 
+	select hazard_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
+        from public.geocheck_zint_hazard_geo_polys 
         group by hazard_localid
         having hazard_localid in (  select hazard_localid 
-                                    from public.geocheck_hazard_geo_pts 
+                                    from public.geocheck_zint_hazard_geo_pts 
                                     where shapeenum = 'Polygon' 
                                     group by hazard_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
@@ -123,7 +124,7 @@ create view public.geocheck_hazard_geo_valid_multipart_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.geocheck_hazard_geo_invalid_polys CASCADE;
 create view public.geocheck_hazard_geo_invalid_polys as
-	select hazard_guid, hazard_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_isvalidreason(shape), st_summary(shape) from public.geocheck_hazard_geo_polys where ST_IsValid(shape) = 'f';
+	select hazard_guid, hazard_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_hazard_geo_polys where ST_IsValid(shape) = 'f';
 
 
 -------------------------------
@@ -132,8 +133,8 @@ create view public.geocheck_hazard_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_hazreduc_geo_pts CASCADE; 
-create or replace view public.geocheck_hazreduc_geo_pts as
+drop view if exists public.geocheck_zint_hazreduc_geo_pts CASCADE; 
+create or replace view public.geocheck_zint_hazreduc_geo_pts as
 
    select
 	hazreduc.hazreduc_guid,
@@ -179,14 +180,14 @@ create or replace view public.geocheck_hazreduc_geo_pts as
 
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_hazreduc_geo_polys CASCADE;
-create or replace view public.geocheck_hazreduc_geo_polys as
+drop view if exists public.geocheck_zint_hazreduc_geo_polys CASCADE;
+create or replace view public.geocheck_zint_hazreduc_geo_polys as
 	select hazreduc_guid, hazreduc_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_hazreduc_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_hazreduc_geo_pts where shapeenum = 'Polygon' 
 		order by hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid  having count(*) > 2
 	order by hazreduc_guid;
@@ -196,24 +197,24 @@ drop view if exists public.geocheck_hazreduc_geo_polys_few_vertices CASCADE;
 create or replace view public.geocheck_hazreduc_geo_polys_few_vertices as
     select hazreduc_guid, hazreduc_localid, shape_id, count(*) as pointcount
     from (select hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-        from public.geocheck_hazreduc_geo_pts where shapeenum = 'Polygon' 
+        from public.geocheck_zint_hazreduc_geo_pts where shapeenum = 'Polygon' 
         order by hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno) as values 
     group by hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid  having count(*) < 3
     order by hazreduc_guid;
 
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_hazreduc_geo_valid_polys CASCADE;
-create view public.geocheck_hazreduc_geo_valid_polys as
-select hazreduc_guid, hazreduc_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_summary(shape) from public.geocheck_hazreduc_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_hazreduc_geo_valid_polys CASCADE;
+create view public.geocheck_zint_hazreduc_geo_valid_polys as
+select hazreduc_guid, hazreduc_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_hazreduc_geo_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
 drop view if exists public.geocheck_hazreduc_geo_valid_multipart_polys CASCADE;
 create view public.geocheck_hazreduc_geo_valid_multipart_polys as
-    select hazreduc_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11), st_summary(st_collect(shape))
-        from public.geocheck_hazreduc_geo_polys 
+    select hazreduc_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
+        from public.geocheck_zint_hazreduc_geo_polys 
         group by hazreduc_localid
         having hazreduc_localid in (  select hazreduc_localid 
-                                    from public.geocheck_hazreduc_geo_pts 
+                                    from public.geocheck_zint_hazreduc_geo_pts 
                                     where shapeenum = 'Polygon' 
                                     group by hazreduc_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
@@ -222,7 +223,7 @@ create view public.geocheck_hazreduc_geo_valid_multipart_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.geocheck_hazreduc_geo_invalid_polys CASCADE;
 create view public.geocheck_hazreduc_geo_invalid_polys as
-	select hazreduc_guid, hazreduc_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_isvalidreason(shape), st_summary(shape) from public.geocheck_hazreduc_geo_polys where ST_IsValid(shape) = 'f';
+	select hazreduc_guid, hazreduc_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_hazreduc_geo_polys where ST_IsValid(shape) = 'f';
 
 
 -------------------------------
@@ -231,8 +232,8 @@ create view public.geocheck_hazreduc_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_accident_geo_pts CASCADE; 
-create or replace view public.geocheck_accident_geo_pts as
+drop view if exists public.geocheck_zint_accident_geo_pts CASCADE; 
+create or replace view public.geocheck_zint_accident_geo_pts as
 
    select
 	accident.accident_guid,
@@ -278,14 +279,14 @@ create or replace view public.geocheck_accident_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_accident_geo_polys CASCADE;
-create or replace view public.geocheck_accident_geo_polys as
+drop view if exists public.geocheck_zint_accident_geo_polys CASCADE;
+create or replace view public.geocheck_zint_accident_geo_polys as
 	select accident_guid, accident_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select accident_guid, accident_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_accident_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_accident_geo_pts where shapeenum = 'Polygon' 
 		order by accident_guid, accident_localid, shape_id, geospatialinfo_guid, pointno)	as values 
 	group by accident_guid, accident_localid, shape_id, geospatialinfo_guid  having count(*) > 2
 	order by accident_guid;
@@ -295,24 +296,24 @@ drop view if exists public.geocheck_accident_geo_polys_few_vertices CASCADE;
 create or replace view public.geocheck_accident_geo_polys_few_vertices as
 	select accident_guid, accident_localid, shape_id, count(*) as pointcount
 	from (select accident_guid, accident_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_accident_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_accident_geo_pts where shapeenum = 'Polygon' 
 		order by accident_guid, accident_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by accident_guid, accident_localid, shape_id, geospatialinfo_guid  having count(*) < 3
 	order by accident_guid;
 						
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_accident_geo_valid_polys CASCADE;
-create view public.geocheck_accident_geo_valid_polys as
-	select accident_guid, accident_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_summary(shape) from public.geocheck_accident_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_accident_geo_valid_polys CASCADE;
+create view public.geocheck_zint_accident_geo_valid_polys as
+	select accident_guid, accident_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_accident_geo_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
 drop view if exists public.geocheck_accident_geo_valid_multipart_polys CASCADE;
 create view public.geocheck_accident_geo_valid_multipart_polys as
-    select accident_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11), st_summary(st_collect(shape))
-        from public.geocheck_accident_geo_polys 
+    select accident_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
+        from public.geocheck_zint_accident_geo_polys 
         group by accident_localid
         having accident_localid in (  select accident_localid 
-                                    from public.geocheck_accident_geo_pts 
+                                    from public.geocheck_zint_accident_geo_pts 
                                     where shapeenum = 'Polygon' 
                                     group by accident_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
@@ -321,7 +322,7 @@ create view public.geocheck_accident_geo_valid_multipart_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.geocheck_accident_geo_invalid_polys CASCADE;
 create view public.geocheck_accident_geo_invalid_polys as
-	select accident_guid, accident_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_isvalidreason(shape), st_summary(shape) from public.geocheck_accident_geo_polys where ST_IsValid(shape) = 'f';
+	select accident_guid, accident_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_accident_geo_polys where ST_IsValid(shape) = 'f';
 
 
 -------------------------------
@@ -330,8 +331,8 @@ create view public.geocheck_accident_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_mre_geo_pts CASCADE; 
-create or replace view public.geocheck_mre_geo_pts as
+drop view if exists public.geocheck_zint_mre_geo_pts CASCADE; 
+create or replace view public.geocheck_zint_mre_geo_pts as
 
    select
 	mre.mre_guid,
@@ -377,14 +378,14 @@ create or replace view public.geocheck_mre_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_mre_geo_polys CASCADE;
-create or replace view public.geocheck_mre_geo_polys as
+drop view if exists public.geocheck_zint_mre_geo_polys CASCADE;
+create or replace view public.geocheck_zint_mre_geo_polys as
 	select mre_guid, mre_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select mre_guid, mre_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_mre_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_mre_geo_pts where shapeenum = 'Polygon' 
 		order by mre_guid, mre_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by mre_guid, mre_localid, shape_id, geospatialinfo_guid  having count(*) > 2
 	order by mre_guid;
@@ -394,24 +395,24 @@ drop view if exists public.geocheck_mre_geo_polys_few_vertices CASCADE;
 create or replace view public.geocheck_mre_geo_polys_few_vertices as
 	select mre_guid, mre_localid, shape_id, count(*) as pointcount
 	from (select mre_guid, mre_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_mre_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_mre_geo_pts where shapeenum = 'Polygon' 
 		order by mre_guid, mre_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by mre_guid, mre_localid, shape_id, geospatialinfo_guid  having count(*) < 3
 	order by mre_guid;
 						
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_mre_geo_valid_polys CASCADE;
-create view public.geocheck_mre_geo_valid_polys as
-	select mre_guid, mre_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_summary(shape) from public.geocheck_mre_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_mre_geo_valid_polys CASCADE;
+create view public.geocheck_zint_mre_geo_valid_polys as
+	select mre_guid, mre_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_mre_geo_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
 drop view if exists public.geocheck_mre_geo_valid_multipart_polys CASCADE;
 create view public.geocheck_mre_geo_valid_multipart_polys as
-    select mre_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11), st_summary(st_collect(shape))
-        from public.geocheck_mre_geo_polys 
+    select mre_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
+        from public.geocheck_zint_mre_geo_polys 
         group by mre_localid
         having mre_localid in (  select mre_localid 
-                                    from public.geocheck_mre_geo_pts 
+                                    from public.geocheck_zint_mre_geo_pts 
                                     where shapeenum = 'Polygon' 
                                     group by mre_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
@@ -420,7 +421,7 @@ create view public.geocheck_mre_geo_valid_multipart_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.geocheck_mre_geo_invalid_polys CASCADE;
 create view public.geocheck_mre_geo_invalid_polys as
-	select mre_guid, mre_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_isvalidreason(shape), st_summary(shape) from public.geocheck_mre_geo_polys where ST_IsValid(shape) = 'f';
+	select mre_guid, mre_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_mre_geo_polys where ST_IsValid(shape) = 'f';
 	
 -------------------------------
 -- Begin qa section
@@ -428,8 +429,8 @@ create view public.geocheck_mre_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_qa_geo_pts CASCADE; 
-create or replace view public.geocheck_qa_geo_pts as
+drop view if exists public.geocheck_zint_qa_geo_pts CASCADE; 
+create or replace view public.geocheck_zint_qa_geo_pts as
 
    select
 	qa.qa_guid,
@@ -475,14 +476,14 @@ create or replace view public.geocheck_qa_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_qa_geo_polys CASCADE;
-create or replace view public.geocheck_qa_geo_polys as
+drop view if exists public.geocheck_zint_qa_geo_polys CASCADE;
+create or replace view public.geocheck_zint_qa_geo_polys as
 	select qa_guid, qa_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select qa_guid, qa_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_qa_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_qa_geo_pts where shapeenum = 'Polygon' 
 		order by qa_guid, qa_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by qa_guid, qa_localid, shape_id, geospatialinfo_guid  having count(*) > 2
 	order by qa_guid;
@@ -492,24 +493,24 @@ drop view if exists public.geocheck_qa_geo_polys_few_vertices CASCADE;
 create or replace view public.geocheck_qa_geo_polys_few_vertices as
 	select qa_guid, qa_localid, shape_id, count(*) as pointcount
 	from (select qa_guid, qa_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_qa_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_qa_geo_pts where shapeenum = 'Polygon' 
 		order by qa_guid, qa_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by qa_guid, qa_localid, shape_id, geospatialinfo_guid  having count(*) < 3
 	order by qa_guid;
 						
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_qa_geo_valid_polys CASCADE;
-create view public.geocheck_qa_geo_valid_polys as
-	select qa_guid, qa_localid, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_summary(shape) from public.geocheck_qa_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_qa_geo_valid_polys CASCADE;
+create view public.geocheck_zint_qa_geo_valid_polys as
+	select qa_guid, qa_localid, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_qa_geo_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
 drop view if exists public.geocheck_qa_geo_valid_multipart_polys CASCADE;
 create view public.geocheck_qa_geo_valid_multipart_polys as
-    select qa_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11), st_summary(st_collect(shape))
-        from public.geocheck_qa_geo_polys 
+    select qa_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
+        from public.geocheck_zint_qa_geo_polys 
         group by qa_localid
         having qa_localid in (  select qa_localid 
-                                    from public.geocheck_qa_geo_pts 
+                                    from public.geocheck_zint_qa_geo_pts 
                                     where shapeenum = 'Polygon' 
                                     group by qa_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
@@ -518,7 +519,7 @@ create view public.geocheck_qa_geo_valid_multipart_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.geocheck_qa_geo_invalid_polys CASCADE;
 create view public.geocheck_qa_geo_invalid_polys as
-	select qa_guid, qa_localid, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_isvalidreason(shape), st_summary(shape) from public.geocheck_qa_geo_polys where ST_IsValid(shape) = 'f';
+	select qa_guid, qa_localid, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_qa_geo_polys where ST_IsValid(shape) = 'f';
 	
 -------------------------------
 -- Begin victim section
@@ -526,8 +527,8 @@ create view public.geocheck_qa_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_victim_geo_pts CASCADE; 
-create or replace view public.geocheck_victim_geo_pts as
+drop view if exists public.geocheck_zint_victim_geo_pts CASCADE; 
+create or replace view public.geocheck_zint_victim_geo_pts as
 
    select
 	victim.victim_guid,
@@ -573,14 +574,14 @@ create or replace view public.geocheck_victim_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_victim_geo_polys CASCADE;
-create or replace view public.geocheck_victim_geo_polys as
+drop view if exists public.geocheck_zint_victim_geo_polys CASCADE;
+create or replace view public.geocheck_zint_victim_geo_polys as
 	select victim_guid, victim_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select victim_guid, victim_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_victim_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_victim_geo_pts where shapeenum = 'Polygon' 
 		order by victim_guid, victim_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by victim_guid, victim_localid, shape_id, geospatialinfo_guid  having count(*) > 2
 	order by victim_guid;
@@ -590,24 +591,24 @@ drop view if exists public.geocheck_victim_geo_polys_few_vertices CASCADE;
 create or replace view public.geocheck_victim_geo_polys_few_vertices as
 	select victim_guid, victim_localid, shape_id, count(*) as pointcount
 	from (select victim_guid, victim_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_victim_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_victim_geo_pts where shapeenum = 'Polygon' 
 		order by victim_guid, victim_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by victim_guid, victim_localid, shape_id, geospatialinfo_guid  having count(*) < 3
 	order by victim_guid;
 						
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_victim_geo_valid_polys CASCADE;
-create view public.geocheck_victim_geo_valid_polys as
-	select victim_guid, victim_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_summary(shape) from public.geocheck_victim_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_victim_geo_valid_polys CASCADE;
+create view public.geocheck_zint_victim_geo_valid_polys as
+	select victim_guid, victim_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_victim_geo_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
 drop view if exists public.geocheck_victim_geo_valid_multipart_polys CASCADE;
 create view public.geocheck_victim_geo_valid_multipart_polys as
-    select victim_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11), st_summary(st_collect(shape))
-        from public.geocheck_victim_geo_polys 
+    select victim_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
+        from public.geocheck_zint_victim_geo_polys 
         group by victim_localid
         having victim_localid in (  select victim_localid 
-                                    from public.geocheck_victim_geo_pts 
+                                    from public.geocheck_zint_victim_geo_pts 
                                     where shapeenum = 'Polygon' 
                                     group by victim_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
@@ -616,7 +617,7 @@ create view public.geocheck_victim_geo_valid_multipart_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.geocheck_victim_geo_invalid_polys CASCADE;
 create view public.geocheck_victim_geo_invalid_polys as
-	select victim_guid, victim_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_isvalidreason(shape), st_summary(shape) from public.geocheck_victim_geo_polys where ST_IsValid(shape) = 'f';
+	select victim_guid, victim_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_victim_geo_polys where ST_IsValid(shape) = 'f';
 
 -------------------------------
 -- Begin victim_assistance section
@@ -624,8 +625,8 @@ create view public.geocheck_victim_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_victim_assistance_geo_pts CASCADE; 
-create or replace view public.geocheck_victim_assistance_geo_pts as
+drop view if exists public.geocheck_zint_victim_assistance_geo_pts CASCADE; 
+create or replace view public.geocheck_zint_victim_assistance_geo_pts as
 
    select
 	victim_assistance.guid,
@@ -671,14 +672,14 @@ create or replace view public.geocheck_victim_assistance_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_victim_assistance_geo_polys CASCADE;
-create or replace view public.geocheck_victim_assistance_geo_polys as
+drop view if exists public.geocheck_zint_victim_assistance_geo_polys CASCADE;
+create or replace view public.geocheck_zint_victim_assistance_geo_polys as
 	select guid, localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select guid, localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_victim_assistance_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_victim_assistance_geo_pts where shapeenum = 'Polygon' 
 		order by guid, localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by guid, localid, shape_id, geospatialinfo_guid  having count(*) > 2
 	order by guid;
@@ -688,24 +689,24 @@ drop view if exists public.geocheck_victim_assistance_geo_polys_few_vertices CAS
 create or replace view public.geocheck_victim_assistance_geo_polys_few_vertices as
 	select guid, localid, shape_id, count(*) as pointcount
 	from (select guid, localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_victim_assistance_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_victim_assistance_geo_pts where shapeenum = 'Polygon' 
 		order by guid, localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by guid, localid, shape_id, geospatialinfo_guid  having count(*) < 3
 	order by guid;
 						
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_victim_assistance_geo_valid_polys CASCADE;
-create view public.geocheck_victim_assistance_geo_valid_polys as
-	select guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_summary(shape) from public.geocheck_victim_assistance_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_victim_assistance_geo_valid_polys CASCADE;
+create view public.geocheck_zint_victim_assistance_geo_valid_polys as
+	select guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_victim_assistance_geo_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
 drop view if exists public.geocheck_victim_assistance_geo_valid_multipart_polys CASCADE;
 create view public.geocheck_victim_assistance_geo_valid_multipart_polys as
-    select localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11), st_summary(st_collect(shape))
-        from public.geocheck_victim_assistance_geo_polys 
+    select localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
+        from public.geocheck_zint_victim_assistance_geo_polys 
         group by localid
         having localid in (  select localid 
-                                    from public.geocheck_victim_assistance_geo_pts 
+                                    from public.geocheck_zint_victim_assistance_geo_pts 
                                     where shapeenum = 'Polygon' 
                                     group by localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
@@ -714,7 +715,7 @@ create view public.geocheck_victim_assistance_geo_valid_multipart_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.geocheck_victim_assistance_geo_invalid_polys CASCADE;
 create view public.geocheck_victim_assistance_geo_invalid_polys as
-	select guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_isvalidreason(shape), st_summary(shape) from public.geocheck_victim_assistance_geo_polys where ST_IsValid(shape) = 'f';
+	select guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_victim_assistance_geo_polys where ST_IsValid(shape) = 'f';
 	
 
 -------------------------------
@@ -723,8 +724,8 @@ create view public.geocheck_victim_assistance_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_task_geo_pts CASCADE; 
-create or replace view public.geocheck_task_geo_pts as
+drop view if exists public.geocheck_zint_task_geo_pts CASCADE; 
+create or replace view public.geocheck_zint_task_geo_pts as
 
    select
 	task.guid,
@@ -770,14 +771,14 @@ create or replace view public.geocheck_task_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_task_geo_polys CASCADE;
-create or replace view public.geocheck_task_geo_polys as
+drop view if exists public.geocheck_zint_task_geo_polys CASCADE;
+create or replace view public.geocheck_zint_task_geo_polys as
 	select guid, localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select guid, localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_task_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_task_geo_pts where shapeenum = 'Polygon' 
 		order by guid, localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by guid, localid, shape_id, geospatialinfo_guid  having count(*) > 2
 	order by guid;
@@ -787,24 +788,24 @@ drop view if exists public.geocheck_task_geo_polys_few_vertices CASCADE;
 create or replace view public.geocheck_task_geo_polys_few_vertices as
 	select guid, localid, shape_id, count(*) as pointcount
 	from (select guid, localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_task_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_task_geo_pts where shapeenum = 'Polygon' 
 		order by guid, localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by guid, localid, shape_id, geospatialinfo_guid  having count(*) < 3
 	order by guid;
 						
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_task_geo_valid_polys CASCADE;
-create view public.geocheck_task_geo_valid_polys as
-	select guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_summary(shape) from public.geocheck_task_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_task_geo_valid_polys CASCADE;
+create view public.geocheck_zint_task_geo_valid_polys as
+	select guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_task_geo_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
 drop view if exists public.geocheck_task_geo_valid_multipart_polys CASCADE;
 create view public.geocheck_task_geo_valid_multipart_polys as
-    select localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11), st_summary(st_collect(shape))
-        from public.geocheck_task_geo_polys 
+    select localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
+        from public.geocheck_zint_task_geo_polys 
         group by localid
         having localid in (  select localid 
-                                    from public.geocheck_task_geo_pts 
+                                    from public.geocheck_zint_task_geo_pts 
                                     where shapeenum = 'Polygon' 
                                     group by localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
@@ -813,7 +814,7 @@ create view public.geocheck_task_geo_valid_multipart_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.geocheck_task_geo_invalid_polys CASCADE;
 create view public.geocheck_task_geo_invalid_polys as
-	select guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_isvalidreason(shape), st_summary(shape) from public.geocheck_task_geo_polys where ST_IsValid(shape) = 'f';
+	select guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_task_geo_polys where ST_IsValid(shape) = 'f';
 
 -------------------------------
 -- Begin gazetteer section
@@ -821,8 +822,8 @@ create view public.geocheck_task_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_gazetteer_geo_pts CASCADE; 
-create or replace view public.geocheck_gazetteer_geo_pts as
+drop view if exists public.geocheck_zint_gazetteer_geo_pts CASCADE; 
+create or replace view public.geocheck_zint_gazetteer_geo_pts as
 
    select
 	gazetteer.gazetteer_guid,
@@ -868,14 +869,14 @@ create or replace view public.geocheck_gazetteer_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_gazetteer_geo_polys CASCADE;
-create or replace view public.geocheck_gazetteer_geo_polys as
+drop view if exists public.geocheck_zint_gazetteer_geo_polys CASCADE;
+create or replace view public.geocheck_zint_gazetteer_geo_polys as
 	select gazetteer_guid, gazetteer_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select gazetteer_guid, gazetteer_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_gazetteer_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_gazetteer_geo_pts where shapeenum = 'Polygon' 
 		order by gazetteer_guid, gazetteer_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by gazetteer_guid, gazetteer_localid, shape_id, geospatialinfo_guid having count(*) > 2
 	order by gazetteer_guid;
@@ -885,24 +886,24 @@ drop view if exists public.geocheck_gazetteer_geo_polys_few_vertices CASCADE;
 create or replace view public.geocheck_gazetteer_geo_polys_few_vertices as
 	select gazetteer_guid, gazetteer_localid, shape_id, count(*) as pointcount
 	from (select gazetteer_guid, gazetteer_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_gazetteer_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_gazetteer_geo_pts where shapeenum = 'Polygon' 
 		order by gazetteer_guid, gazetteer_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by gazetteer_guid, gazetteer_localid, shape_id, geospatialinfo_guid having count(*) < 3
 	order by gazetteer_guid;
 
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_gazetteer_geo_valid_polys CASCADE;
-create view public.geocheck_gazetteer_geo_valid_polys as
-	select gazetteer_guid, gazetteer_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_summary(shape) from public.geocheck_gazetteer_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_gazetteer_geo_valid_polys CASCADE;
+create view public.geocheck_zint_gazetteer_geo_valid_polys as
+	select gazetteer_guid, gazetteer_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_gazetteer_geo_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
 drop view if exists public.geocheck_gazetteer_geo_valid_multipart_polys CASCADE;
 create view public.geocheck_gazetteer_geo_valid_multipart_polys as
-    select gazetteer_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11), st_summary(st_collect(shape))
-        from public.geocheck_gazetteer_geo_polys 
+    select gazetteer_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
+        from public.geocheck_zint_gazetteer_geo_polys 
         group by gazetteer_localid
         having gazetteer_localid in (  select gazetteer_localid 
-                                    from public.geocheck_gazetteer_geo_pts 
+                                    from public.geocheck_zint_gazetteer_geo_pts 
                                     where shapeenum = 'Polygon' 
                                     group by gazetteer_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
@@ -911,7 +912,7 @@ create view public.geocheck_gazetteer_geo_valid_multipart_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.geocheck_gazetteer_geo_invalid_polys CASCADE;
 create view public.geocheck_gazetteer_geo_invalid_polys as
-	select gazetteer_guid, gazetteer_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_isvalidreason(shape), st_summary(shape) from public.geocheck_gazetteer_geo_polys where ST_IsValid(shape) = 'f';
+	select gazetteer_guid, gazetteer_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_gazetteer_geo_polys where ST_IsValid(shape) = 'f';
 
 -------------------------------
 -- Begin location section
@@ -919,8 +920,8 @@ create view public.geocheck_gazetteer_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_location_geo_pts CASCADE; 
-create or replace view public.geocheck_location_geo_pts as
+drop view if exists public.geocheck_zint_location_geo_pts CASCADE; 
+create or replace view public.geocheck_zint_location_geo_pts as
 
    select
 	location.location_guid,
@@ -966,14 +967,14 @@ create or replace view public.geocheck_location_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_location_geo_polys CASCADE;
-create or replace view public.geocheck_location_geo_polys as
+drop view if exists public.geocheck_zint_location_geo_polys CASCADE;
+create or replace view public.geocheck_zint_location_geo_polys as
 	select location_guid, location_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select location_guid, location_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_location_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_location_geo_pts where shapeenum = 'Polygon' 
 		order by location_guid, location_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by location_guid, location_localid, shape_id, geospatialinfo_guid having count(*) > 2
 	order by location_guid;
@@ -983,24 +984,24 @@ drop view if exists public.geocheck_location_geo_polys_few_vertices CASCADE;
 create or replace view public.geocheck_location_geo_polys_few_vertices as
 	select location_guid, location_localid, shape_id, count(*) as pointcount
 	from (select location_guid, location_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_location_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_location_geo_pts where shapeenum = 'Polygon' 
 		order by location_guid, location_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by location_guid, location_localid, shape_id, geospatialinfo_guid having count(*) < 3
 	order by location_guid;
 
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_location_geo_valid_polys CASCADE;
-create view public.geocheck_location_geo_valid_polys as
-	select location_guid, location_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_summary(shape) from public.geocheck_location_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_location_geo_valid_polys CASCADE;
+create view public.geocheck_zint_location_geo_valid_polys as
+	select location_guid, location_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_location_geo_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
 drop view if exists public.geocheck_location_geo_valid_multipart_polys CASCADE;
 create view public.geocheck_location_geo_valid_multipart_polys as
-    select location_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11), st_summary(st_collect(shape))
-        from public.geocheck_location_geo_polys 
+    select location_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
+        from public.geocheck_zint_location_geo_polys 
         group by location_localid
         having location_localid in (  select location_localid 
-                                    from public.geocheck_location_geo_pts 
+                                    from public.geocheck_zint_location_geo_pts 
                                     where shapeenum = 'Polygon' 
                                     group by location_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
@@ -1009,7 +1010,7 @@ create view public.geocheck_location_geo_valid_multipart_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.geocheck_location_geo_invalid_polys CASCADE;
 create view public.geocheck_location_geo_invalid_polys as
-	select location_guid, location_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_isvalidreason(shape), st_summary(shape) from public.geocheck_location_geo_polys where ST_IsValid(shape) = 'f';
+	select location_guid, location_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_location_geo_polys where ST_IsValid(shape) = 'f';
 
 -------------------------------
 -- Begin place section
@@ -1017,8 +1018,8 @@ create view public.geocheck_location_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_place_geo_pts CASCADE; 
-create or replace view public.geocheck_place_geo_pts as
+drop view if exists public.geocheck_zint_place_geo_pts CASCADE; 
+create or replace view public.geocheck_zint_place_geo_pts as
 
    select
 	place.place_guid,
@@ -1064,14 +1065,14 @@ create or replace view public.geocheck_place_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_place_geo_polys CASCADE;
-create or replace view public.geocheck_place_geo_polys as
+drop view if exists public.geocheck_zint_place_geo_polys CASCADE;
+create or replace view public.geocheck_zint_place_geo_polys as
 	select place_guid, place_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select place_guid, place_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_place_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_place_geo_pts where shapeenum = 'Polygon' 
 		order by place_guid, place_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by place_guid, place_localid, shape_id, geospatialinfo_guid having count(*) > 2
 	order by place_guid;
@@ -1081,24 +1082,24 @@ drop view if exists public.geocheck_place_geo_polys_few_vertices CASCADE;
 create or replace view public.geocheck_place_geo_polys_few_vertices as
 	select place_guid, place_localid, shape_id, count(*) as pointcount
 	from (select place_guid, place_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_place_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_place_geo_pts where shapeenum = 'Polygon' 
 		order by place_guid, place_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by place_guid, place_localid, shape_id, geospatialinfo_guid having count(*) < 3
 	order by place_guid;
 
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_place_geo_valid_polys CASCADE;
-create view public.geocheck_place_geo_valid_polys as
-	select place_guid, place_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_summary(shape) from public.geocheck_place_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_place_geo_valid_polys CASCADE;
+create view public.geocheck_zint_place_geo_valid_polys as
+	select place_guid, place_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_place_geo_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
 drop view if exists public.geocheck_place_geo_valid_multipart_polys CASCADE;
 create view public.geocheck_place_geo_valid_multipart_polys as
-    select place_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11), st_summary(st_collect(shape))
-        from public.geocheck_place_geo_polys 
+    select place_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
+        from public.geocheck_zint_place_geo_polys 
         group by place_localid
         having place_localid in (  select place_localid 
-                                    from public.geocheck_place_geo_pts 
+                                    from public.geocheck_zint_place_geo_pts 
                                     where shapeenum = 'Polygon' 
                                     group by place_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
@@ -1107,7 +1108,7 @@ create view public.geocheck_place_geo_valid_multipart_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.geocheck_place_geo_invalid_polys CASCADE;
 create view public.geocheck_place_geo_invalid_polys as
-	select place_guid, place_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_isvalidreason(shape), st_summary(shape) from public.geocheck_place_geo_polys where ST_IsValid(shape) = 'f';
+	select place_guid, place_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_place_geo_polys where ST_IsValid(shape) = 'f';
 
 -------------------------------
 -- Begin organisation section
@@ -1115,8 +1116,8 @@ create view public.geocheck_place_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_organisation_geo_pts CASCADE; 
-create or replace view public.geocheck_organisation_geo_pts as
+drop view if exists public.geocheck_zint_organisation_geo_pts CASCADE; 
+create or replace view public.geocheck_zint_organisation_geo_pts as
 
    select
 	organisation.org_guid,
@@ -1162,14 +1163,14 @@ create or replace view public.geocheck_organisation_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_organisation_geo_polys CASCADE;
-create or replace view public.geocheck_organisation_geo_polys as
+drop view if exists public.geocheck_zint_organisation_geo_polys CASCADE;
+create or replace view public.geocheck_zint_organisation_geo_polys as
 	select org_guid, org_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select org_guid, org_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_organisation_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_organisation_geo_pts where shapeenum = 'Polygon' 
 		order by org_guid, org_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by org_guid, org_localid, shape_id, geospatialinfo_guid having count(*) > 2
 	order by org_guid;
@@ -1179,24 +1180,24 @@ drop view if exists public.geocheck_organisation_geo_polys_few_vertices CASCADE;
 create or replace view public.geocheck_organisation_geo_polys_few_vertices as
 	select org_guid, org_localid, shape_id, count(*) as pointcount
 	from (select org_guid, org_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_organisation_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_organisation_geo_pts where shapeenum = 'Polygon' 
 		order by org_guid, org_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by org_guid, org_localid, shape_id, geospatialinfo_guid having count(*) < 3
 	order by org_guid;
 
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_organisation_geo_valid_polys CASCADE;
-create view public.geocheck_organisation_geo_valid_polys as
-	select org_guid, org_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_summary(shape) from public.geocheck_organisation_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_organisation_geo_valid_polys CASCADE;
+create view public.geocheck_zint_organisation_geo_valid_polys as
+	select org_guid, org_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_organisation_geo_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
 drop view if exists public.geocheck_organisation_geo_valid_multipart_polys CASCADE;
 create view public.geocheck_organisation_geo_valid_multipart_polys as
-    select org_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11), st_summary(st_collect(shape))
-        from public.geocheck_organisation_geo_polys 
+    select org_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
+        from public.geocheck_zint_organisation_geo_polys 
         group by org_localid
         having org_localid in (  select org_localid 
-                                    from public.geocheck_organisation_geo_pts 
+                                    from public.geocheck_zint_organisation_geo_pts 
                                     where shapeenum = 'Polygon' 
                                     group by org_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
@@ -1205,7 +1206,7 @@ create view public.geocheck_organisation_geo_valid_multipart_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.geocheck_organisation_geo_invalid_polys CASCADE;
 create view public.geocheck_organisation_geo_invalid_polys as
-	select org_guid, org_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11), st_isvalidreason(shape), st_summary(shape) from public.geocheck_organisation_geo_polys where ST_IsValid(shape) = 'f';
+	select org_guid, org_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_organisation_geo_polys where ST_IsValid(shape) = 'f';
 
 -------------------------------
 -- Begin distance between consecutive points section

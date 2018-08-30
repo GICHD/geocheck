@@ -4,7 +4,7 @@ The SQL script geocheck.sql create views in the public schema of IMSMAng that he
 
 To create the views just copy the script in a query window in pgAdmin III or Navicat and run it.
 
-The check looks at a variety of possible issues:
+The checks look at a variety of possible issues:
   - invalid polygons (IMSMAng does not check if a polygon created by a set of points is valid)
   - polygosn with too many vertices (less than 3)
   - duplicate information (polygon, point, point or polygon id)
@@ -66,3 +66,12 @@ The check looks at a variety of possible issues:
 | wkt | WKT LINESTRING - can be visualize with [this webpage](https://arthur-e.github.io/Wicket/sandbox-gmaps3.html) |
 | st_summary | Polygon description |
 
+### geocheck_distance_polygon_points
+**This view must be empty. If not, issues must be fixed manually in IMSMAng.**
+
+| Field | Description|
+| --- | --- |
+| object_type | IMSMAng object type |
+| localid | IMSMAng localid |
+| shapeid | IMSMAng polygon shapeid |
+| distance | Distance in meters higher than the default distance used in the query |

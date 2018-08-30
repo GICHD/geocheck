@@ -2,7 +2,7 @@
 --  do a replace all on "5000 -- CHANGE MIN"
 
 -- V2
---	Change name to Geo_Check
+--	Change name to geocheck
 --	The views are now created in the public schema
 --	Shape_id added to all the invalid polygon views
 --	Integration of Polygon_Distance_Check.sql (5000m), the results are in geocheck_distance_polygon_points
@@ -18,6 +18,9 @@
 --	Duplicate point localid in polygon with trimmed ID can be found in geocheck_duplicate_polygon_point_localid_trimmed
 --	Duplicate point localid in polygon (Dist and Bearing only) can be found in geocheck_duplicate_polygon_point_localid_dist_and_bear
 --	Duplicate point localid in polygon (Dist and Bearing only) with trimmed ID can be found in geocheck_duplicate_polygon_point_localid_dist_and_bear_trimmed
+
+-- V2.2
+--	Duplicate points in polygon can be found in geocheck_duplicate_points_in_polygons
 
 -------------------------------
 -- Begin hazard section
@@ -3179,6 +3182,157 @@ create or replace view public.geocheck_duplicate_polygons as
 		count(*)
 	from geocheck_organisation_geo_polys
 	group by org_guid, org_localid, shape
+	having count(*) > 1
+	order by 3)
+	order by 1, 3;
+	
+-------------------------------
+-- Begin duplicate points in polygon section
+-------------------------------
+
+drop view if exists public.geocheck_duplicate_points_in_polygons CASCADE; 
+create or replace view public.geocheck_duplicate_points_in_polygons as
+	(select
+		'HAZARD',
+		hazard_guid,
+		hazard_localid,
+		shape_id,
+		shape,
+		count(*)
+	from geocheck_hazard_geo_pts
+	group by hazard_guid, hazard_localid, shape_id, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'HAZARD REDUCTION',
+		hazreduc_guid,
+		hazreduc_localid,
+		shape_id,
+		shape,
+		count(*)
+	from geocheck_hazreduc_geo_polys
+	group by hazreduc_guid, hazreduc_localid, shape_id, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'ACCIDENT',
+		accident_guid,
+		accident_localid,
+		shape_id,
+		shape,
+		count(*)
+	from geocheck_accident_geo_polys
+	group by accident_guid, accident_localid, shape_id, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'MRE',
+		mre_guid,
+		mre_localid,
+		shape_id,
+		shape,
+		count(*)
+	from geocheck_mre_geo_polys
+	group by mre_guid, mre_localid, shape_id, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'QA',
+		qa_guid,
+		qa_localid,
+		shape_id,
+		shape,
+		count(*)
+	from geocheck_qa_geo_polys
+	group by qa_guid, qa_localid, shape_id, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'VICTIM',
+		victim_guid,
+		victim_localid,
+		shape_id,
+		shape,
+		count(*)
+	from geocheck_victim_geo_polys
+	group by victim_guid, victim_localid, shape_id, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'GAZETTEER',
+		gazetteer_guid,
+		gazetteer_localid,
+		shape_id,
+		shape,
+		count(*)
+	from geocheck_gazetteer_geo_polys
+	group by gazetteer_guid, gazetteer_localid, shape_id, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'LOCATION',
+		location_guid,
+		location_localid,
+		shape_id,
+		shape,
+		count(*)
+	from geocheck_location_geo_polys
+	group by location_guid, location_localid, shape_id, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'PLACE',
+		place_guid,
+		place_localid,
+		shape_id,
+		shape,
+		count(*)
+	from geocheck_place_geo_polys
+	group by place_guid, place_localid, shape_id, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'VICTIM ASSISTANCE',
+		guid,
+		localid,
+		shape_id,
+		shape,
+		count(*)
+	from geocheck_victim_assistance_geo_polys
+	group by guid, localid, shape_id, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'TASK',
+		guid,
+		localid,
+		shape_id,
+		shape,
+		count(*)
+	from geocheck_task_geo_polys
+	group by guid, localid, shape_id, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'ORGANISATION',
+		org_guid,
+		org_localid,
+		shape_id,
+		shape,
+		count(*)
+	from geocheck_organisation_geo_polys
+	group by org_guid, org_localid, shape_id, shape
 	having count(*) > 1
 	order by 3)
 	order by 1, 3;

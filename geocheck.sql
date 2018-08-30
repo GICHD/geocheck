@@ -1219,7 +1219,7 @@ create view public.geocheck_organisation_geo_invalid_polys as
 drop view if exists public.geocheck_distance_polygon_points CASCADE; 
 create or replace view public.geocheck_distance_polygon_points as
 
-	(select 'HAZARD', name1, shape1, distance from
+	(select 'HAZARD' as object_type, name1 as localid, shape1 as shapeid, distance from
 	(select name as name1, shape_id as shape1, lead(name) over (order by name, shape_id, pointno) as name2,
 	lead(shape_id) over (order by name, shape_id, pointno) as shape2,
 	st_distance_sphere(point, lead(point) over(order by name, shape_id, pointno)) as distance from (
@@ -1235,7 +1235,7 @@ create or replace view public.geocheck_distance_polygon_points as
 	order by name1, shape1)
 	union
 	-- HAZARD REDUCTION
-	(select 'HAZARD REDUCTION', name1, shape1, distance from
+	(select 'HAZARD REDUCTION' as object_type, name1 as localid, shape1 as shapeid, distance from
 	(select name as name1, shape_id as shape1, lead(name) over (order by name, shape_id, pointno) as name2,
 	lead(shape_id) over (order by name, shape_id, pointno) as shape2,
 	st_distance_sphere(point, lead(point) over(order by name, shape_id, pointno)) as distance from (
@@ -1251,7 +1251,7 @@ create or replace view public.geocheck_distance_polygon_points as
 	order by name1, shape1)
 	union
 	-- ACCIDENT
-	(select 'ACCIDENT', name1, shape1, distance from
+	(select 'ACCIDENT' as object_type, name1 as localid, shape1 as shapeid, distance from
 	(select name as name1, shape_id as shape1, lead(name) over (order by name, shape_id, pointno) as name2,
 	lead(shape_id) over (order by name, shape_id, pointno) as shape2,
 	st_distance_sphere(point, lead(point) over(order by name, shape_id, pointno)) as distance from (
@@ -1267,7 +1267,7 @@ create or replace view public.geocheck_distance_polygon_points as
 	order by name1, shape1)
 	union
 	-- MRE
-	(select 'MRE', name1, shape1, distance from
+	(select 'MRE' as object_type, name1 as localid, shape1 as shapeid, distance from
 	(select name as name1, shape_id as shape1, lead(name) over (order by name, shape_id, pointno) as name2,
 	lead(shape_id) over (order by name, shape_id, pointno) as shape2,
 	st_distance_sphere(point, lead(point) over(order by name, shape_id, pointno)) as distance from (
@@ -1283,7 +1283,7 @@ create or replace view public.geocheck_distance_polygon_points as
 	order by name1, shape1)
 	union
 	-- QA
-	(select 'QA', name1, shape1, distance from
+	(select 'QA' as object_type, name1 as localid, shape1 as shapeid, distance from
 	(select name as name1, shape_id as shape1, lead(name) over (order by name, shape_id, pointno) as name2,
 	lead(shape_id) over (order by name, shape_id, pointno) as shape2,
 	st_distance_sphere(point, lead(point) over(order by name, shape_id, pointno)) as distance from (
@@ -1299,7 +1299,7 @@ create or replace view public.geocheck_distance_polygon_points as
 	order by name1, shape1)
 	union
 	-- VICTIM
-	(select 'VICTIM', name1, shape1, distance from
+	(select 'VICTIM' as object_type, name1 as localid, shape1 as shapeid, distance from
 	(select name as name1, shape_id as shape1, lead(name) over (order by name, shape_id, pointno) as name2,
 	lead(shape_id) over (order by name, shape_id, pointno) as shape2,
 	st_distance_sphere(point, lead(point) over(order by name, shape_id, pointno)) as distance from (
@@ -1315,7 +1315,7 @@ create or replace view public.geocheck_distance_polygon_points as
 	order by name1, shape1)
 	union
 	-- GAZETTEER
-	(select 'GAZETTEER', name1, shape1, distance from
+	(select 'GAZETTEER' as object_type, name1 as localid, shape1 as shapeid, distance from
 	(select name as name1, shape_id as shape1, lead(name) over (order by name, shape_id, pointno) as name2,
 	lead(shape_id) over (order by name, shape_id, pointno) as shape2,
 	st_distance_sphere(point, lead(point) over(order by name, shape_id, pointno)) as distance from (
@@ -1331,7 +1331,7 @@ create or replace view public.geocheck_distance_polygon_points as
 	order by name1, shape1)
 	union
 	-- LOCATION
-	(select 'LOCATION', name1, shape1, distance from
+	(select 'LOCATION' as object_type, name1 as localid, shape1 as shapeid, distance from
 	(select name as name1, shape_id as shape1, lead(name) over (order by name, shape_id, pointno) as name2,
 	lead(shape_id) over (order by name, shape_id, pointno) as shape2,
 	st_distance_sphere(point, lead(point) over(order by name, shape_id, pointno)) as distance from (
@@ -1347,7 +1347,7 @@ create or replace view public.geocheck_distance_polygon_points as
 	order by name1, shape1)
 	union
 	-- PLACE
-	(select 'PLACE', name1, shape1, distance from
+	(select 'PLACE' as object_type, name1 as localid, shape1 as shapeid, distance from
 	(select name as name1, shape_id as shape1, lead(name) over (order by name, shape_id, pointno) as name2,
 	lead(shape_id) over (order by name, shape_id, pointno) as shape2,
 	st_distance_sphere(point, lead(point) over(order by name, shape_id, pointno)) as distance from (
@@ -1363,7 +1363,7 @@ create or replace view public.geocheck_distance_polygon_points as
 	order by name1, shape1)
 	union
 	-- VICTIM ASSISTANCE
-	(select 'VICTIM ASSISTANCE', name1, shape1, distance from
+	(select 'VICTIM ASSISTANCE' as object_type, name1 as localid, shape1 as shapeid, distance from
 	(select name as name1, shape_id as shape1, lead(name) over (order by name, shape_id, pointno) as name2,
 	lead(shape_id) over (order by name, shape_id, pointno) as shape2,
 	st_distance_sphere(point, lead(point) over(order by name, shape_id, pointno)) as distance from (
@@ -1379,7 +1379,7 @@ create or replace view public.geocheck_distance_polygon_points as
 	order by name1, shape1)
 	union
 	-- TASK
-	(select 'TASK', name1, shape1, distance from
+	(select 'TASK' as object_type, name1 as localid, shape1 as shapeid, distance from
 	(select name as name1, shape_id as shape1, lead(name) over (order by name, shape_id, pointno) as name2,
 	lead(shape_id) over (order by name, shape_id, pointno) as shape2,
 	st_distance_sphere(point, lead(point) over(order by name, shape_id, pointno)) as distance from (
@@ -1395,7 +1395,7 @@ create or replace view public.geocheck_distance_polygon_points as
 	order by name1, shape1)
 	union
 	-- ORGANISATION
-	(select 'ORGANISATION', name1, shape1, distance from
+	(select 'ORGANISATION' as object_type, name1 as localid, shape1 as shapeid, distance from
 	(select name as name1, shape_id as shape1, lead(name) over (order by name, shape_id, pointno) as name2,
 	lead(shape_id) over (order by name, shape_id, pointno) as shape2,
 	st_distance_sphere(point, lead(point) over(order by name, shape_id, pointno)) as distance from (

@@ -10,7 +10,7 @@ The check looks at a variety of possible issues:
   - duplicate information (polygon, point, point or polygon id)
   - distance between points in a polygon
 
-Views available and description:
+## Views available and description:
 
 |View Name| Type | Description|
 | --- | --- | --- |
@@ -32,10 +32,9 @@ Views available and description:
   
 **!TYPE!** can be accident, gazetteer, hazard, hazreduc, location, mre, organisation, place, qa, task, victim_assistance, victim.
 
-This section provide detail information for each view type
+## This section provide detail information for each view type
 
-geocheck_**!TYPE!**_geo_invalid_polys:
-------------------------------------
+### geocheck_**!TYPE!**_geo_invalid_polys
 **This view must be empty. If not, issues must be fixed manually in IMSMAng.**
 
 | Field | Description|
@@ -48,8 +47,7 @@ geocheck_**!TYPE!**_geo_invalid_polys:
 | st_isvalidreason | Reason why the polygon is invalid |
 | st_summary | Polygon description |
 
-geocheck_**!TYPE!**_geo_few_vertices:
-------------------------------------
+### geocheck_**!TYPE!**_geo_few_vertices
 **This view must be empty. If not, issues must be fixed manually in IMSMAng.**
 
 | Field | Description|
@@ -59,8 +57,7 @@ geocheck_**!TYPE!**_geo_few_vertices:
 | shape_id | IMSMAng polygon shapeid |
 | pointcount | Number of vertices |
 
-geocheck_**!TYPE!**_geo_valid_multipart_polys:
-------------------------------------
+### geocheck_**!TYPE!**_geo_valid_multipart_polys
 
 | Field | Description|
 | --- | --- |

@@ -4,7 +4,7 @@ The SQL script geocheck.sql create views in the public schema of IMSMAng that he
 
 To create the views just copy the script in a query window in pgAdmin III or Navicat and run it.
 
-The checks looks at a variety of possible issues:
+The check looks at a variety of possible issues:
   - invalid polygon (IMSMAng does not check if a polygon created by a set of points is valid)
   - polygon with too many vertices (less than 3)
   - duplicate information (polygon, point, point or polygon id)
@@ -28,19 +28,7 @@ Views available and description:
 | geocheck_duplicate_polygons | List of duplicate polygons based on coordinates in a record |
 | geocheck_
   
-**!TYPE!** can be:
-  - accident
-  - gazetteer
-  - hazard
-  - hazreduc
-  - location
-  - mre
-  - organisation
-  - place
-  - qa
-  - task
-  - victim_assistance
-  - victim
+**!TYPE!** can be accident, gazetteer, hazard, hazreduc, location, mre, organisation, place, qa, task, victim_assistance, victim.
 
 This section provide detail information for each view type
 

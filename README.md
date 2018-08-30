@@ -4,13 +4,13 @@ The SQL script geocheck.sql create views in the public schema of IMSMAng that he
 
 To create the views just copy the script in a query window in pgAdmin III or Navicat and run it.
 
-The check looks at a variety of possible issues:
-  - invalid polygon (IMSMAng does not check if a polygon created by a set of points is valid)
-  - polygon with too many vertices (less than 3)
+The checks look at a variety of possible issues:
+  - invalid polygons (IMSMAng does not check if a polygon created by a set of points is valid)
+  - polygosn with too many vertices (less than 3)
   - duplicate information (polygon, point, point or polygon id)
   - distance between points in a polygon
 
-Views available and description:
+## Views available and description:
 
 |View Name| Type | Description|
 | --- | --- | --- |
@@ -26,11 +26,52 @@ Views available and description:
 | geocheck_duplicate_polygon_polyid | Geo Check | List of duplicate polygons based on shape id in a record |
 | geocheck_duplicate_polygon_polyid_trimmed | Geo Check | List of duplicate polygons based on trimmed shapeid in a record |
 | geocheck_duplicate_polygons | Geo Check | List of duplicate polygons based on coordinates in a record |
-| geocheck_
+| geocheck_zint_**!TYPE!**_geo_polys | Intermediary | List of polygons created from IMSMAng points |
+| geocheck_zint_**!TYPE!**_geo_pts | Intermediary | List of points from IMSMAng |
+| geocheck_zint_**!TYPE!**_geo_valid_polys | Intermediary | List of valid polygons |
   
 **!TYPE!** can be accident, gazetteer, hazard, hazreduc, location, mre, organisation, place, qa, task, victim_assistance, victim.
 
-This section provide detail information for each view type
+## This section provide detail information for each view type
 
-geocheck_**!TYPE!**_geo_invalid_polys:
-  - 
+### geocheck_**!TYPE!**_geo_invalid_polys
+**This view must be empty. If not, issues must be fixed manually in IMSMAng.**
+
+| Field | Description|
+| --- | --- |
+| **!TYPE!**_guid | IMSMAng guid |
+| **!TYPE!**_localid | IMSMAng localid |
+| shape_id | IMSMAng polygon shapeid |
+| shape | Postgis geometry |
+| wkt | WKT LINESTRING - can be visualize with [this webpage](https://arthur-e.github.io/Wicket/sandbox-gmaps3.html) |
+| st_isvalidreason | Reason why the polygon is invalid |
+| st_summary | Polygon description |
+
+### geocheck_**!TYPE!**_geo_few_vertices
+**This view must be empty. If not, issues must be fixed manually in IMSMAng.**
+
+| Field | Description|
+| --- | --- |
+| **!TYPE!**_guid | IMSMAng guid |
+| **!TYPE!**_localid | IMSMAng localid |
+| shape_id | IMSMAng polygon shapeid |
+| pointcount | Number of vertices |
+
+### geocheck_**!TYPE!**_geo_valid_multipart_polys
+
+| Field | Description|
+| --- | --- |
+| **!TYPE!**_localid | IMSMAng localid |
+| st_collect | Postgis geometry |
+| wkt | WKT LINESTRING - can be visualize with [this webpage](https://arthur-e.github.io/Wicket/sandbox-gmaps3.html) |
+| st_summary | Polygon description |
+
+### geocheck_distance_polygon_points
+**This view must be empty. If not, issues must be fixed manually in IMSMAng.**
+
+| Field | Description|
+| --- | --- |
+| object_type | IMSMAng object type |
+| localid | IMSMAng localid |
+| shapeid | IMSMAng polygon shapeid |
+| distance | Distance in meters higher than the default distance used in the query |

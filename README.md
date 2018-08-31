@@ -19,22 +19,22 @@ There are 2 types of views:
 
 |View Name| Type | Description|
 | --- | --- | --- |
-| [geocheck_obj_**!TYPE!**_invalid_polys](#test_test) | [Geo Check](#geocheck_obj_type_invalid_polys) | List of invalid polygons |
-| geocheck_obj_**!TYPE!**_few_vertices_polys | Geo Check | List of polygons defined with less than 3 vertices|
-| geocheck_duplicate_polygons | Geo Check | List of duplicate polygons based on coordinates in a record |
-| geocheck_duplicate_polygon_polyid | Geo Check | List of duplicate polygons based on shape id in a record |
-| geocheck_duplicate_polygon_polyid_trimmed | Geo Check | List of duplicate polygons based on trimmed shapeid in a record |
-| geocheck_duplicate_polygon_points | Geo Check | List of of duplicate points based on coordinates in a polygon|
-| geocheck_duplicate_polygon_point_localid | Geo Check | List of duplicate points based on localid in a polygon
-| geocheck_duplicate_polygon_point_localid_trimmed | Geo Check | List of duplicate points based on trimmed localid in a polygon|
-| geocheck_duplicate_points TODO | Geo Check | List of duplicate points based on coordinates NOT in a polygon|
-| geocheck_duplicate_point_point_localid | Geo Check | List of duplicate points based on localid NOT in a polygon |
-| geocheck_duplicate_point_point_localid_trimmed | Geo Check | List of duplicate points based on trimmed localid NOT in a polygon |
-| geocheck_distance_polygon_points | Geo Check | List of polygons defined with a distance between 2 consecutive points higher than the value defined in the query (default is 5000 m) | 
-| geocheck_zint_**!TYPE!**_valid_polys | Information | List of valid polygons |
-| geocheck_zint_**!TYPE!**_valid_multipart_polys | Information| List of multi polygon records|
-| geocheck_zint_**!TYPE!**_polys | Information | List of polygons created from IMSMAng points |
-| geocheck_zint_**!TYPE!**_pts | Information | List of points from IMSMAng |
+| [geocheck_obj_**!TYPE!**_invalid_polys](#geocheck_obj_type_invalid_polys) | Geo Check | List of invalid polygons |
+| [geocheck_obj_**!TYPE!**_few_vertices_polys](#geocheck_obj_type_few_vertices_polys) | Geo Check | List of polygons defined with less than 3 vertices|
+| [geocheck_duplicate_polygons](#geocheck_duplicate_polygons) | Geo Check | List of duplicate polygons based on coordinates in a record |
+| [geocheck_duplicate_polygon_polyid](#geocheck_duplicate_polygon_polyid) | Geo Check | List of duplicate polygons based on shape id in a record |
+| [geocheck_duplicate_polygon_polyid_trimmed](#geocheck_duplicate_polygon_polyid_trimmed) | Geo Check | List of duplicate polygons based on trimmed shapeid in a record |
+| [geocheck_duplicate_polygon_points](#geocheck_duplicate_polygon_points) | Geo Check | List of of duplicate points based on coordinates in a polygon|
+| [geocheck_duplicate_polygon_point_localid](#geocheck_duplicate_polygon_point_localid) | Geo Check | List of duplicate points based on localid in a polygon
+| [geocheck_duplicate_polygon_point_localid_trimmed](#geocheck_duplicate_polygon_point_localid_trimmed) | Geo Check | List of duplicate points based on trimmed localid in a polygon|
+| [geocheck_duplicate_points TODO](#geocheck_duplicate_points) | Geo Check | List of duplicate points based on coordinates NOT in a polygon|
+| [geocheck_duplicate_point_point_localid](#geocheck_duplicate_point_point_localid) | Geo Check | List of duplicate points based on localid NOT in a polygon |
+| [geocheck_duplicate_point_point_localid_trimmed](#geocheck_duplicate_point_point_localid_trimmed) | Geo Check | List of duplicate points based on trimmed localid NOT in a polygon |
+| [geocheck_distance_polygon_points](#geocheck_distance_polygon_points) | Geo Check | List of polygons defined with a distance between 2 consecutive points higher than the value defined in the query (default is 5000 m) | 
+| [geocheck_zint_**!TYPE!**_valid_polys](#geocheck_zint_type_valid_polys) | Information | List of valid polygons |
+| [geocheck_zint_**!TYPE!**_valid_multipart_polys](#geocheck_zint_type_valid_multipart_polys) | Information| List of multi polygon records|
+| [geocheck_zint_**!TYPE!**_polys](#geocheck_zint_type_polys) | Information | List of polygons created from IMSMAng points |
+| [geocheck_zint_**!TYPE!**_pts](#geocheck_zint_type_pts) | Information | List of points from IMSMAng |
 
 **!TYPE!** can be accident, gazetteer, hazard, hazreduc, location, mre, organisation, place, qa, task, victim_assistance, victim.
 

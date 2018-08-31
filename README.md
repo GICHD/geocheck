@@ -221,7 +221,7 @@ List of polygons defined with a distance between 2 consecutive points higher tha
 
 [View list](#views-available)
 
-### geocheck_obj_**!TYPE!**_valid_polys 
+### geocheck_zint_**!TYPE!**_valid_polys 
 List of valid polygons for each IMSMAng object type.  
 
 | Field | Description|

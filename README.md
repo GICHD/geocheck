@@ -19,7 +19,7 @@ There are 2 types of views:
 
 |View Name| Type | Description|
 | --- | --- | --- |
-| [geocheck_obj_**!TYPE!**_invalid_polys](#test) | Geo Check | List of invalid polygons |
+| [geocheck_obj_**!TYPE!**_invalid_polys](#test_test) | Geo Check | List of invalid polygons |
 | geocheck_obj_**!TYPE!**_few_vertices_polys | Geo Check | List of polygons defined with less than 3 vertices|
 | geocheck_duplicate_polygons | Geo Check | List of duplicate polygons based on coordinates in a record |
 | geocheck_duplicate_polygon_polyid | Geo Check | List of duplicate polygons based on shape id in a record |
@@ -40,7 +40,7 @@ There are 2 types of views:
 
 ## Detailed description
 
-### test
+### test_test
 
 
 ### geocheck_obj_**!type!**_invalid_polys

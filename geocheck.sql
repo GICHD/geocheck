@@ -20,12 +20,12 @@
 --	Duplicate point localid in polygon (Dist and Bearing only) with trimmed ID can be found in geocheck_duplicate_polygon_point_localid_dist_and_bear_trimmed
 
 -- V2.2
---	Duplicate points in polygon can be found in geocheck_duplicate_points_in_polygons
+--	Duplicate points in polygon can be found in geocheck_duplicate_polygon_points
 
 -- V2.3
 --	Add geocheck_**_geo_valid_multipart_polys to identify features with multiple polygons defined for one object.
 --	Remove SRID information in wkt string to simplify copy/paste
---	Rename intermediary tables with _zint_
+--	Rename intermediary tables with _
 
 -------------------------------
 -- Begin hazard section
@@ -33,8 +33,8 @@
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_zint_hazard_geo_pts CASCADE; 
-create or replace view public.geocheck_zint_hazard_geo_pts as
+drop view if exists public.geocheck_zint_hazard_pts CASCADE; 
+create or replace view public.geocheck_zint_hazard_pts as
 
    select
 	hazard.hazard_guid,
@@ -80,41 +80,41 @@ create or replace view public.geocheck_zint_hazard_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_zint_hazard_geo_polys CASCADE;
-create or replace view public.geocheck_zint_hazard_geo_polys as
+drop view if exists public.geocheck_zint_hazard_polys CASCADE;
+create or replace view public.geocheck_zint_hazard_polys as
 	select hazard_guid, hazard_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select hazard_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_hazard_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_hazard_pts where shapeenum = 'Polygon' 
 		order by hazard_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by hazard_guid, hazard_localid, shape_id, geospatialinfo_guid having count(*) > 2
 	order by hazard_guid;
 						
 -- create view to list only low-vertex polygons
-drop view if exists public.geocheck_hazard_geo_polys_few_vertices CASCADE;
-create or replace view public.geocheck_hazard_geo_polys_few_vertices as
+drop view if exists public.geocheck_obj_hazard_few_vertices_polys CASCADE;
+create or replace view public.geocheck_obj_hazard_few_vertices_polys as
 	select hazard_guid, hazard_localid, shape_id, count(*) as pointcount
 	from (select hazard_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_hazard_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_hazard_pts where shapeenum = 'Polygon' 
 		order by hazard_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by hazard_guid, hazard_localid, shape_id, geospatialinfo_guid having count(*) < 3
 	order by hazard_guid;
 
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_zint_hazard_geo_valid_polys CASCADE;
-create view public.geocheck_zint_hazard_geo_valid_polys as
-	select hazard_guid, hazard_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_hazard_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_hazard_valid_polys CASCADE;
+create view public.geocheck_zint_hazard_valid_polys as
+	select hazard_guid, hazard_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_hazard_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_hazard_geo_valid_multipart_polys CASCADE;
-create view public.geocheck_hazard_geo_valid_multipart_polys as
+drop view if exists public.geocheck_zint_hazard_valid_multipart_polys CASCADE;
+create view public.geocheck_zint_hazard_valid_multipart_polys as
 	select hazard_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
-        from public.geocheck_zint_hazard_geo_polys 
+        from public.geocheck_zint_hazard_polys 
         group by hazard_localid
         having hazard_localid in (  select hazard_localid 
-                                    from public.geocheck_zint_hazard_geo_pts 
+                                    from public.geocheck_zint_hazard_pts 
                                     where shapeenum = 'Polygon' 
                                     group by hazard_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
@@ -122,9 +122,9 @@ create view public.geocheck_hazard_geo_valid_multipart_polys as
 
     
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
-drop view if exists public.geocheck_hazard_geo_invalid_polys CASCADE;
-create view public.geocheck_hazard_geo_invalid_polys as
-	select hazard_guid, hazard_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_hazard_geo_polys where ST_IsValid(shape) = 'f';
+drop view if exists public.geocheck_obj_hazard_invalid_polys CASCADE;
+create view public.geocheck_obj_hazard_invalid_polys as
+	select hazard_guid, hazard_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_hazard_polys where ST_IsValid(shape) = 'f';
 
 
 -------------------------------
@@ -133,8 +133,8 @@ create view public.geocheck_hazard_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_zint_hazreduc_geo_pts CASCADE; 
-create or replace view public.geocheck_zint_hazreduc_geo_pts as
+drop view if exists public.geocheck_zint_hazreduc_pts CASCADE; 
+create or replace view public.geocheck_zint_hazreduc_pts as
 
    select
 	hazreduc.hazreduc_guid,
@@ -180,50 +180,50 @@ create or replace view public.geocheck_zint_hazreduc_geo_pts as
 
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_zint_hazreduc_geo_polys CASCADE;
-create or replace view public.geocheck_zint_hazreduc_geo_polys as
+drop view if exists public.geocheck_zint_hazreduc_polys CASCADE;
+create or replace view public.geocheck_zint_hazreduc_polys as
 	select hazreduc_guid, hazreduc_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_hazreduc_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_hazreduc_pts where shapeenum = 'Polygon' 
 		order by hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid  having count(*) > 2
 	order by hazreduc_guid;
 
 -- create view to list only low-vertex polygons
-drop view if exists public.geocheck_hazreduc_geo_polys_few_vertices CASCADE;
-create or replace view public.geocheck_hazreduc_geo_polys_few_vertices as
+drop view if exists public.geocheck_obj_hazreduc_few_vertices_polys CASCADE;
+create or replace view public.geocheck_obj_hazreduc_few_vertices_polys as
     select hazreduc_guid, hazreduc_localid, shape_id, count(*) as pointcount
     from (select hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-        from public.geocheck_zint_hazreduc_geo_pts where shapeenum = 'Polygon' 
+        from public.geocheck_zint_hazreduc_pts where shapeenum = 'Polygon' 
         order by hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno) as values 
     group by hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid  having count(*) < 3
     order by hazreduc_guid;
 
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_zint_hazreduc_geo_valid_polys CASCADE;
-create view public.geocheck_zint_hazreduc_geo_valid_polys as
-select hazreduc_guid, hazreduc_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_hazreduc_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_hazreduc_valid_polys CASCADE;
+create view public.geocheck_zint_hazreduc_valid_polys as
+select hazreduc_guid, hazreduc_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_hazreduc_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_hazreduc_geo_valid_multipart_polys CASCADE;
-create view public.geocheck_hazreduc_geo_valid_multipart_polys as
+drop view if exists public.geocheck_zint_hazreduc_valid_multipart_polys CASCADE;
+create view public.geocheck_zint_hazreduc_valid_multipart_polys as
     select hazreduc_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
-        from public.geocheck_zint_hazreduc_geo_polys 
+        from public.geocheck_zint_hazreduc_polys 
         group by hazreduc_localid
         having hazreduc_localid in (  select hazreduc_localid 
-                                    from public.geocheck_zint_hazreduc_geo_pts 
+                                    from public.geocheck_zint_hazreduc_pts 
                                     where shapeenum = 'Polygon' 
                                     group by hazreduc_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
                                     order by 1);
     
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
-drop view if exists public.geocheck_hazreduc_geo_invalid_polys CASCADE;
-create view public.geocheck_hazreduc_geo_invalid_polys as
-	select hazreduc_guid, hazreduc_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_hazreduc_geo_polys where ST_IsValid(shape) = 'f';
+drop view if exists public.geocheck_obj_hazreduc_invalid_polys CASCADE;
+create view public.geocheck_obj_hazreduc_invalid_polys as
+	select hazreduc_guid, hazreduc_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_hazreduc_polys where ST_IsValid(shape) = 'f';
 
 
 -------------------------------
@@ -232,8 +232,8 @@ create view public.geocheck_hazreduc_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_zint_accident_geo_pts CASCADE; 
-create or replace view public.geocheck_zint_accident_geo_pts as
+drop view if exists public.geocheck_zint_accident_pts CASCADE; 
+create or replace view public.geocheck_zint_accident_pts as
 
    select
 	accident.accident_guid,
@@ -279,50 +279,50 @@ create or replace view public.geocheck_zint_accident_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_zint_accident_geo_polys CASCADE;
-create or replace view public.geocheck_zint_accident_geo_polys as
+drop view if exists public.geocheck_zint_accident_polys CASCADE;
+create or replace view public.geocheck_zint_accident_polys as
 	select accident_guid, accident_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select accident_guid, accident_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_accident_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_accident_pts where shapeenum = 'Polygon' 
 		order by accident_guid, accident_localid, shape_id, geospatialinfo_guid, pointno)	as values 
 	group by accident_guid, accident_localid, shape_id, geospatialinfo_guid  having count(*) > 2
 	order by accident_guid;
 
 -- create view to list only low-vertex polygons
-drop view if exists public.geocheck_accident_geo_polys_few_vertices CASCADE;
-create or replace view public.geocheck_accident_geo_polys_few_vertices as
+drop view if exists public.geocheck_obj_accident_few_vertices_polys CASCADE;
+create or replace view public.geocheck_obj_accident_few_vertices_polys as
 	select accident_guid, accident_localid, shape_id, count(*) as pointcount
 	from (select accident_guid, accident_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_accident_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_accident_pts where shapeenum = 'Polygon' 
 		order by accident_guid, accident_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by accident_guid, accident_localid, shape_id, geospatialinfo_guid  having count(*) < 3
 	order by accident_guid;
 						
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_zint_accident_geo_valid_polys CASCADE;
-create view public.geocheck_zint_accident_geo_valid_polys as
-	select accident_guid, accident_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_accident_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_accident_valid_polys CASCADE;
+create view public.geocheck_zint_accident_valid_polys as
+	select accident_guid, accident_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_accident_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_accident_geo_valid_multipart_polys CASCADE;
-create view public.geocheck_accident_geo_valid_multipart_polys as
+drop view if exists public.geocheck_zint_accident_valid_multipart_polys CASCADE;
+create view public.geocheck_zint_accident_valid_multipart_polys as
     select accident_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
-        from public.geocheck_zint_accident_geo_polys 
+        from public.geocheck_zint_accident_polys 
         group by accident_localid
         having accident_localid in (  select accident_localid 
-                                    from public.geocheck_zint_accident_geo_pts 
+                                    from public.geocheck_zint_accident_pts 
                                     where shapeenum = 'Polygon' 
                                     group by accident_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
                                     order by 1);
 
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
-drop view if exists public.geocheck_accident_geo_invalid_polys CASCADE;
-create view public.geocheck_accident_geo_invalid_polys as
-	select accident_guid, accident_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_accident_geo_polys where ST_IsValid(shape) = 'f';
+drop view if exists public.geocheck_obj_accident_invalid_polys CASCADE;
+create view public.geocheck_obj_accident_invalid_polys as
+	select accident_guid, accident_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_accident_polys where ST_IsValid(shape) = 'f';
 
 
 -------------------------------
@@ -331,8 +331,8 @@ create view public.geocheck_accident_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_zint_mre_geo_pts CASCADE; 
-create or replace view public.geocheck_zint_mre_geo_pts as
+drop view if exists public.geocheck_zint_mre_pts CASCADE; 
+create or replace view public.geocheck_zint_mre_pts as
 
    select
 	mre.mre_guid,
@@ -378,50 +378,50 @@ create or replace view public.geocheck_zint_mre_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_zint_mre_geo_polys CASCADE;
-create or replace view public.geocheck_zint_mre_geo_polys as
+drop view if exists public.geocheck_zint_mre_polys CASCADE;
+create or replace view public.geocheck_zint_mre_polys as
 	select mre_guid, mre_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select mre_guid, mre_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_mre_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_mre_pts where shapeenum = 'Polygon' 
 		order by mre_guid, mre_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by mre_guid, mre_localid, shape_id, geospatialinfo_guid  having count(*) > 2
 	order by mre_guid;
 
 -- create view to list only low-vertex polygons
-drop view if exists public.geocheck_mre_geo_polys_few_vertices CASCADE;
-create or replace view public.geocheck_mre_geo_polys_few_vertices as
+drop view if exists public.geocheck_obj_mre_few_vertices_polys CASCADE;
+create or replace view public.geocheck_obj_mre_few_vertices_polys as
 	select mre_guid, mre_localid, shape_id, count(*) as pointcount
 	from (select mre_guid, mre_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_mre_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_mre_pts where shapeenum = 'Polygon' 
 		order by mre_guid, mre_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by mre_guid, mre_localid, shape_id, geospatialinfo_guid  having count(*) < 3
 	order by mre_guid;
 						
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_zint_mre_geo_valid_polys CASCADE;
-create view public.geocheck_zint_mre_geo_valid_polys as
-	select mre_guid, mre_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_mre_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_mre_valid_polys CASCADE;
+create view public.geocheck_zint_mre_valid_polys as
+	select mre_guid, mre_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_mre_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_mre_geo_valid_multipart_polys CASCADE;
-create view public.geocheck_mre_geo_valid_multipart_polys as
+drop view if exists public.geocheck_zint_mre_valid_multipart_polys CASCADE;
+create view public.geocheck_zint_mre_valid_multipart_polys as
     select mre_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
-        from public.geocheck_zint_mre_geo_polys 
+        from public.geocheck_zint_mre_polys 
         group by mre_localid
         having mre_localid in (  select mre_localid 
-                                    from public.geocheck_zint_mre_geo_pts 
+                                    from public.geocheck_zint_mre_pts 
                                     where shapeenum = 'Polygon' 
                                     group by mre_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
                                     order by 1);
 									
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
-drop view if exists public.geocheck_mre_geo_invalid_polys CASCADE;
-create view public.geocheck_mre_geo_invalid_polys as
-	select mre_guid, mre_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_mre_geo_polys where ST_IsValid(shape) = 'f';
+drop view if exists public.geocheck_obj_mre_invalid_polys CASCADE;
+create view public.geocheck_obj_mre_invalid_polys as
+	select mre_guid, mre_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_mre_polys where ST_IsValid(shape) = 'f';
 	
 -------------------------------
 -- Begin qa section
@@ -429,8 +429,8 @@ create view public.geocheck_mre_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_zint_qa_geo_pts CASCADE; 
-create or replace view public.geocheck_zint_qa_geo_pts as
+drop view if exists public.geocheck_zint_qa_pts CASCADE; 
+create or replace view public.geocheck_zint_qa_pts as
 
    select
 	qa.qa_guid,
@@ -476,50 +476,50 @@ create or replace view public.geocheck_zint_qa_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_zint_qa_geo_polys CASCADE;
-create or replace view public.geocheck_zint_qa_geo_polys as
+drop view if exists public.geocheck_zint_qa_polys CASCADE;
+create or replace view public.geocheck_zint_qa_polys as
 	select qa_guid, qa_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select qa_guid, qa_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_qa_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_qa_pts where shapeenum = 'Polygon' 
 		order by qa_guid, qa_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by qa_guid, qa_localid, shape_id, geospatialinfo_guid  having count(*) > 2
 	order by qa_guid;
 
 -- create view to list only low-vertex polygons
-drop view if exists public.geocheck_qa_geo_polys_few_vertices CASCADE;
-create or replace view public.geocheck_qa_geo_polys_few_vertices as
+drop view if exists public.geocheck_obj_qa_few_vertices_polys CASCADE;
+create or replace view public.geocheck_obj_qa_few_vertices_polys as
 	select qa_guid, qa_localid, shape_id, count(*) as pointcount
 	from (select qa_guid, qa_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_qa_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_qa_pts where shapeenum = 'Polygon' 
 		order by qa_guid, qa_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by qa_guid, qa_localid, shape_id, geospatialinfo_guid  having count(*) < 3
 	order by qa_guid;
 						
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_zint_qa_geo_valid_polys CASCADE;
-create view public.geocheck_zint_qa_geo_valid_polys as
-	select qa_guid, qa_localid, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_qa_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_qa_valid_polys CASCADE;
+create view public.geocheck_zint_qa_valid_polys as
+	select qa_guid, qa_localid, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_qa_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_qa_geo_valid_multipart_polys CASCADE;
-create view public.geocheck_qa_geo_valid_multipart_polys as
+drop view if exists public.geocheck_zint_qa_valid_multipart_polys CASCADE;
+create view public.geocheck_zint_qa_valid_multipart_polys as
     select qa_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
-        from public.geocheck_zint_qa_geo_polys 
+        from public.geocheck_zint_qa_polys 
         group by qa_localid
         having qa_localid in (  select qa_localid 
-                                    from public.geocheck_zint_qa_geo_pts 
+                                    from public.geocheck_zint_qa_pts 
                                     where shapeenum = 'Polygon' 
                                     group by qa_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
                                     order by 1);
 									
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
-drop view if exists public.geocheck_qa_geo_invalid_polys CASCADE;
-create view public.geocheck_qa_geo_invalid_polys as
-	select qa_guid, qa_localid, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_qa_geo_polys where ST_IsValid(shape) = 'f';
+drop view if exists public.geocheck_obj_qa_invalid_polys CASCADE;
+create view public.geocheck_obj_qa_invalid_polys as
+	select qa_guid, qa_localid, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_qa_polys where ST_IsValid(shape) = 'f';
 	
 -------------------------------
 -- Begin victim section
@@ -527,8 +527,8 @@ create view public.geocheck_qa_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_zint_victim_geo_pts CASCADE; 
-create or replace view public.geocheck_zint_victim_geo_pts as
+drop view if exists public.geocheck_zint_victim_pts CASCADE; 
+create or replace view public.geocheck_zint_victim_pts as
 
    select
 	victim.victim_guid,
@@ -574,50 +574,50 @@ create or replace view public.geocheck_zint_victim_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_zint_victim_geo_polys CASCADE;
-create or replace view public.geocheck_zint_victim_geo_polys as
+drop view if exists public.geocheck_zint_victim_polys CASCADE;
+create or replace view public.geocheck_zint_victim_polys as
 	select victim_guid, victim_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select victim_guid, victim_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_victim_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_victim_pts where shapeenum = 'Polygon' 
 		order by victim_guid, victim_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by victim_guid, victim_localid, shape_id, geospatialinfo_guid  having count(*) > 2
 	order by victim_guid;
 
 -- create view to list only low-vertex polygons
-drop view if exists public.geocheck_victim_geo_polys_few_vertices CASCADE;
-create or replace view public.geocheck_victim_geo_polys_few_vertices as
+drop view if exists public.geocheck_obj_victim_few_vertices_polys CASCADE;
+create or replace view public.geocheck_obj_victim_few_vertices_polys as
 	select victim_guid, victim_localid, shape_id, count(*) as pointcount
 	from (select victim_guid, victim_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_victim_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_victim_pts where shapeenum = 'Polygon' 
 		order by victim_guid, victim_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by victim_guid, victim_localid, shape_id, geospatialinfo_guid  having count(*) < 3
 	order by victim_guid;
 						
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_zint_victim_geo_valid_polys CASCADE;
-create view public.geocheck_zint_victim_geo_valid_polys as
-	select victim_guid, victim_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_victim_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_victim_valid_polys CASCADE;
+create view public.geocheck_zint_victim_valid_polys as
+	select victim_guid, victim_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_victim_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_victim_geo_valid_multipart_polys CASCADE;
-create view public.geocheck_victim_geo_valid_multipart_polys as
+drop view if exists public.geocheck_zint_victim_valid_multipart_polys CASCADE;
+create view public.geocheck_zint_victim_valid_multipart_polys as
     select victim_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
-        from public.geocheck_zint_victim_geo_polys 
+        from public.geocheck_zint_victim_polys 
         group by victim_localid
         having victim_localid in (  select victim_localid 
-                                    from public.geocheck_zint_victim_geo_pts 
+                                    from public.geocheck_zint_victim_pts 
                                     where shapeenum = 'Polygon' 
                                     group by victim_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
                                     order by 1);
 									
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
-drop view if exists public.geocheck_victim_geo_invalid_polys CASCADE;
-create view public.geocheck_victim_geo_invalid_polys as
-	select victim_guid, victim_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_victim_geo_polys where ST_IsValid(shape) = 'f';
+drop view if exists public.geocheck_obj_victim_invalid_polys CASCADE;
+create view public.geocheck_obj_victim_invalid_polys as
+	select victim_guid, victim_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_victim_polys where ST_IsValid(shape) = 'f';
 
 -------------------------------
 -- Begin victim_assistance section
@@ -625,8 +625,8 @@ create view public.geocheck_victim_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_zint_victim_assistance_geo_pts CASCADE; 
-create or replace view public.geocheck_zint_victim_assistance_geo_pts as
+drop view if exists public.geocheck_zint_victim_assistance_pts CASCADE; 
+create or replace view public.geocheck_zint_victim_assistance_pts as
 
    select
 	victim_assistance.guid,
@@ -672,50 +672,50 @@ create or replace view public.geocheck_zint_victim_assistance_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_zint_victim_assistance_geo_polys CASCADE;
-create or replace view public.geocheck_zint_victim_assistance_geo_polys as
+drop view if exists public.geocheck_zint_victim_assistance_polys CASCADE;
+create or replace view public.geocheck_zint_victim_assistance_polys as
 	select guid, localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select guid, localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_victim_assistance_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_victim_assistance_pts where shapeenum = 'Polygon' 
 		order by guid, localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by guid, localid, shape_id, geospatialinfo_guid  having count(*) > 2
 	order by guid;
 
 -- create view to list only low-vertex polygons
-drop view if exists public.geocheck_victim_assistance_geo_polys_few_vertices CASCADE;
-create or replace view public.geocheck_victim_assistance_geo_polys_few_vertices as
+drop view if exists public.geocheck_obj_victim_assistance_few_vertices_polys CASCADE;
+create or replace view public.geocheck_obj_victim_assistance_few_vertices_polys as
 	select guid, localid, shape_id, count(*) as pointcount
 	from (select guid, localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_victim_assistance_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_victim_assistance_pts where shapeenum = 'Polygon' 
 		order by guid, localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by guid, localid, shape_id, geospatialinfo_guid  having count(*) < 3
 	order by guid;
 						
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_zint_victim_assistance_geo_valid_polys CASCADE;
-create view public.geocheck_zint_victim_assistance_geo_valid_polys as
-	select guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_victim_assistance_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_victim_assistance_valid_polys CASCADE;
+create view public.geocheck_zint_victim_assistance_valid_polys as
+	select guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_victim_assistance_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_victim_assistance_geo_valid_multipart_polys CASCADE;
-create view public.geocheck_victim_assistance_geo_valid_multipart_polys as
+drop view if exists public.geocheck_zint_victim_assistance_valid_multipart_polys CASCADE;
+create view public.geocheck_zint_victim_assistance_valid_multipart_polys as
     select localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
-        from public.geocheck_zint_victim_assistance_geo_polys 
+        from public.geocheck_zint_victim_assistance_polys 
         group by localid
         having localid in (  select localid 
-                                    from public.geocheck_zint_victim_assistance_geo_pts 
+                                    from public.geocheck_zint_victim_assistance_pts 
                                     where shapeenum = 'Polygon' 
                                     group by localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
                                     order by 1);
 									
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
-drop view if exists public.geocheck_victim_assistance_geo_invalid_polys CASCADE;
-create view public.geocheck_victim_assistance_geo_invalid_polys as
-	select guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_victim_assistance_geo_polys where ST_IsValid(shape) = 'f';
+drop view if exists public.geocheck_obj_victim_assistance_invalid_polys CASCADE;
+create view public.geocheck_obj_victim_assistance_invalid_polys as
+	select guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_victim_assistance_polys where ST_IsValid(shape) = 'f';
 	
 
 -------------------------------
@@ -724,8 +724,8 @@ create view public.geocheck_victim_assistance_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_zint_task_geo_pts CASCADE; 
-create or replace view public.geocheck_zint_task_geo_pts as
+drop view if exists public.geocheck_zint_task_pts CASCADE; 
+create or replace view public.geocheck_zint_task_pts as
 
    select
 	task.guid,
@@ -771,50 +771,50 @@ create or replace view public.geocheck_zint_task_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_zint_task_geo_polys CASCADE;
-create or replace view public.geocheck_zint_task_geo_polys as
+drop view if exists public.geocheck_zint_task_polys CASCADE;
+create or replace view public.geocheck_zint_task_polys as
 	select guid, localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select guid, localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_task_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_task_pts where shapeenum = 'Polygon' 
 		order by guid, localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by guid, localid, shape_id, geospatialinfo_guid  having count(*) > 2
 	order by guid;
 
 -- create view to list only low-vertex polygons
-drop view if exists public.geocheck_task_geo_polys_few_vertices CASCADE;
-create or replace view public.geocheck_task_geo_polys_few_vertices as
+drop view if exists public.geocheck_obj_task_few_vertices_polys CASCADE;
+create or replace view public.geocheck_obj_task_few_vertices_polys as
 	select guid, localid, shape_id, count(*) as pointcount
 	from (select guid, localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_task_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_task_pts where shapeenum = 'Polygon' 
 		order by guid, localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by guid, localid, shape_id, geospatialinfo_guid  having count(*) < 3
 	order by guid;
 						
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_zint_task_geo_valid_polys CASCADE;
-create view public.geocheck_zint_task_geo_valid_polys as
-	select guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_task_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_task_valid_polys CASCADE;
+create view public.geocheck_zint_task_valid_polys as
+	select guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_task_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_task_geo_valid_multipart_polys CASCADE;
-create view public.geocheck_task_geo_valid_multipart_polys as
+drop view if exists public.geocheck_zint_task_valid_multipart_polys CASCADE;
+create view public.geocheck_zint_task_valid_multipart_polys as
     select localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
-        from public.geocheck_zint_task_geo_polys 
+        from public.geocheck_zint_task_polys 
         group by localid
         having localid in (  select localid 
-                                    from public.geocheck_zint_task_geo_pts 
+                                    from public.geocheck_zint_task_pts 
                                     where shapeenum = 'Polygon' 
                                     group by localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
                                     order by 1);
 									
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
-drop view if exists public.geocheck_task_geo_invalid_polys CASCADE;
-create view public.geocheck_task_geo_invalid_polys as
-	select guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_task_geo_polys where ST_IsValid(shape) = 'f';
+drop view if exists public.geocheck_obj_task_invalid_polys CASCADE;
+create view public.geocheck_obj_task_invalid_polys as
+	select guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_task_polys where ST_IsValid(shape) = 'f';
 
 -------------------------------
 -- Begin gazetteer section
@@ -822,8 +822,8 @@ create view public.geocheck_task_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_zint_gazetteer_geo_pts CASCADE; 
-create or replace view public.geocheck_zint_gazetteer_geo_pts as
+drop view if exists public.geocheck_zint_gazetteer_pts CASCADE; 
+create or replace view public.geocheck_zint_gazetteer_pts as
 
    select
 	gazetteer.gazetteer_guid,
@@ -869,50 +869,50 @@ create or replace view public.geocheck_zint_gazetteer_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_zint_gazetteer_geo_polys CASCADE;
-create or replace view public.geocheck_zint_gazetteer_geo_polys as
+drop view if exists public.geocheck_zint_gazetteer_polys CASCADE;
+create or replace view public.geocheck_zint_gazetteer_polys as
 	select gazetteer_guid, gazetteer_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select gazetteer_guid, gazetteer_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_gazetteer_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_gazetteer_pts where shapeenum = 'Polygon' 
 		order by gazetteer_guid, gazetteer_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by gazetteer_guid, gazetteer_localid, shape_id, geospatialinfo_guid having count(*) > 2
 	order by gazetteer_guid;
 						
 -- create view to list only low-vertex polygons
-drop view if exists public.geocheck_gazetteer_geo_polys_few_vertices CASCADE;
-create or replace view public.geocheck_gazetteer_geo_polys_few_vertices as
+drop view if exists public.geocheck_obj_gazetteer_few_vertices_polys CASCADE;
+create or replace view public.geocheck_obj_gazetteer_few_vertices_polys as
 	select gazetteer_guid, gazetteer_localid, shape_id, count(*) as pointcount
 	from (select gazetteer_guid, gazetteer_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_gazetteer_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_gazetteer_pts where shapeenum = 'Polygon' 
 		order by gazetteer_guid, gazetteer_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by gazetteer_guid, gazetteer_localid, shape_id, geospatialinfo_guid having count(*) < 3
 	order by gazetteer_guid;
 
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_zint_gazetteer_geo_valid_polys CASCADE;
-create view public.geocheck_zint_gazetteer_geo_valid_polys as
-	select gazetteer_guid, gazetteer_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_gazetteer_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_gazetteer_valid_polys CASCADE;
+create view public.geocheck_zint_gazetteer_valid_polys as
+	select gazetteer_guid, gazetteer_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_gazetteer_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_gazetteer_geo_valid_multipart_polys CASCADE;
-create view public.geocheck_gazetteer_geo_valid_multipart_polys as
+drop view if exists public.geocheck_zint_gazetteer_valid_multipart_polys CASCADE;
+create view public.geocheck_zint_gazetteer_valid_multipart_polys as
     select gazetteer_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
-        from public.geocheck_zint_gazetteer_geo_polys 
+        from public.geocheck_zint_gazetteer_polys 
         group by gazetteer_localid
         having gazetteer_localid in (  select gazetteer_localid 
-                                    from public.geocheck_zint_gazetteer_geo_pts 
+                                    from public.geocheck_zint_gazetteer_pts 
                                     where shapeenum = 'Polygon' 
                                     group by gazetteer_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
                                     order by 1);
 									
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
-drop view if exists public.geocheck_gazetteer_geo_invalid_polys CASCADE;
-create view public.geocheck_gazetteer_geo_invalid_polys as
-	select gazetteer_guid, gazetteer_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_gazetteer_geo_polys where ST_IsValid(shape) = 'f';
+drop view if exists public.geocheck_obj_gazetteer_invalid_polys CASCADE;
+create view public.geocheck_obj_gazetteer_invalid_polys as
+	select gazetteer_guid, gazetteer_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_gazetteer_polys where ST_IsValid(shape) = 'f';
 
 -------------------------------
 -- Begin location section
@@ -920,8 +920,8 @@ create view public.geocheck_gazetteer_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_zint_location_geo_pts CASCADE; 
-create or replace view public.geocheck_zint_location_geo_pts as
+drop view if exists public.geocheck_zint_location_pts CASCADE; 
+create or replace view public.geocheck_zint_location_pts as
 
    select
 	location.location_guid,
@@ -967,50 +967,50 @@ create or replace view public.geocheck_zint_location_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_zint_location_geo_polys CASCADE;
-create or replace view public.geocheck_zint_location_geo_polys as
+drop view if exists public.geocheck_zint_location_polys CASCADE;
+create or replace view public.geocheck_zint_location_polys as
 	select location_guid, location_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select location_guid, location_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_location_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_location_pts where shapeenum = 'Polygon' 
 		order by location_guid, location_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by location_guid, location_localid, shape_id, geospatialinfo_guid having count(*) > 2
 	order by location_guid;
 						
 -- create view to list only low-vertex polygons
-drop view if exists public.geocheck_location_geo_polys_few_vertices CASCADE;
-create or replace view public.geocheck_location_geo_polys_few_vertices as
+drop view if exists public.geocheck_obj_location_few_vertices_polys CASCADE;
+create or replace view public.geocheck_obj_location_few_vertices_polys as
 	select location_guid, location_localid, shape_id, count(*) as pointcount
 	from (select location_guid, location_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_location_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_location_pts where shapeenum = 'Polygon' 
 		order by location_guid, location_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by location_guid, location_localid, shape_id, geospatialinfo_guid having count(*) < 3
 	order by location_guid;
 
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_zint_location_geo_valid_polys CASCADE;
-create view public.geocheck_zint_location_geo_valid_polys as
-	select location_guid, location_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_location_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_location_valid_polys CASCADE;
+create view public.geocheck_zint_location_valid_polys as
+	select location_guid, location_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_location_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_location_geo_valid_multipart_polys CASCADE;
-create view public.geocheck_location_geo_valid_multipart_polys as
+drop view if exists public.geocheck_zint_location_valid_multipart_polys CASCADE;
+create view public.geocheck_zint_location_valid_multipart_polys as
     select location_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
-        from public.geocheck_zint_location_geo_polys 
+        from public.geocheck_zint_location_polys 
         group by location_localid
         having location_localid in (  select location_localid 
-                                    from public.geocheck_zint_location_geo_pts 
+                                    from public.geocheck_zint_location_pts 
                                     where shapeenum = 'Polygon' 
                                     group by location_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
                                     order by 1);
 									
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
-drop view if exists public.geocheck_location_geo_invalid_polys CASCADE;
-create view public.geocheck_location_geo_invalid_polys as
-	select location_guid, location_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_location_geo_polys where ST_IsValid(shape) = 'f';
+drop view if exists public.geocheck_obj_location_invalid_polys CASCADE;
+create view public.geocheck_obj_location_invalid_polys as
+	select location_guid, location_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_location_polys where ST_IsValid(shape) = 'f';
 
 -------------------------------
 -- Begin place section
@@ -1018,8 +1018,8 @@ create view public.geocheck_location_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_zint_place_geo_pts CASCADE; 
-create or replace view public.geocheck_zint_place_geo_pts as
+drop view if exists public.geocheck_zint_place_pts CASCADE; 
+create or replace view public.geocheck_zint_place_pts as
 
    select
 	place.place_guid,
@@ -1065,50 +1065,50 @@ create or replace view public.geocheck_zint_place_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_zint_place_geo_polys CASCADE;
-create or replace view public.geocheck_zint_place_geo_polys as
+drop view if exists public.geocheck_zint_place_polys CASCADE;
+create or replace view public.geocheck_zint_place_polys as
 	select place_guid, place_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select place_guid, place_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_place_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_place_pts where shapeenum = 'Polygon' 
 		order by place_guid, place_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by place_guid, place_localid, shape_id, geospatialinfo_guid having count(*) > 2
 	order by place_guid;
 						
 -- create view to list only low-vertex polygons
-drop view if exists public.geocheck_place_geo_polys_few_vertices CASCADE;
-create or replace view public.geocheck_place_geo_polys_few_vertices as
+drop view if exists public.geocheck_obj_place_few_vertices_polys CASCADE;
+create or replace view public.geocheck_obj_place_few_vertices_polys as
 	select place_guid, place_localid, shape_id, count(*) as pointcount
 	from (select place_guid, place_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_place_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_place_pts where shapeenum = 'Polygon' 
 		order by place_guid, place_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by place_guid, place_localid, shape_id, geospatialinfo_guid having count(*) < 3
 	order by place_guid;
 
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_zint_place_geo_valid_polys CASCADE;
-create view public.geocheck_zint_place_geo_valid_polys as
-	select place_guid, place_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_place_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_place_valid_polys CASCADE;
+create view public.geocheck_zint_place_valid_polys as
+	select place_guid, place_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_place_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_place_geo_valid_multipart_polys CASCADE;
-create view public.geocheck_place_geo_valid_multipart_polys as
+drop view if exists public.geocheck_zint_place_valid_multipart_polys CASCADE;
+create view public.geocheck_zint_place_valid_multipart_polys as
     select place_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
-        from public.geocheck_zint_place_geo_polys 
+        from public.geocheck_zint_place_polys 
         group by place_localid
         having place_localid in (  select place_localid 
-                                    from public.geocheck_zint_place_geo_pts 
+                                    from public.geocheck_zint_place_pts 
                                     where shapeenum = 'Polygon' 
                                     group by place_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
                                     order by 1);
 									
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
-drop view if exists public.geocheck_place_geo_invalid_polys CASCADE;
-create view public.geocheck_place_geo_invalid_polys as
-	select place_guid, place_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_place_geo_polys where ST_IsValid(shape) = 'f';
+drop view if exists public.geocheck_obj_place_invalid_polys CASCADE;
+create view public.geocheck_obj_place_invalid_polys as
+	select place_guid, place_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_place_polys where ST_IsValid(shape) = 'f';
 
 -------------------------------
 -- Begin organisation section
@@ -1116,8 +1116,8 @@ create view public.geocheck_place_geo_invalid_polys as
 
 -- Create a view that extracts all required info for geopoints into one table
 
-drop view if exists public.geocheck_zint_organisation_geo_pts CASCADE; 
-create or replace view public.geocheck_zint_organisation_geo_pts as
+drop view if exists public.geocheck_zint_organisation_pts CASCADE; 
+create or replace view public.geocheck_zint_organisation_pts as
 
    select
 	organisation.org_guid,
@@ -1163,50 +1163,50 @@ create or replace view public.geocheck_zint_organisation_geo_pts as
  
 -- Create a spatial view based on the points from the previous view, built into polygons and ordered by pointno.
 -- This view can be materialized in PostgreSQL 9.3+
-drop view if exists public.geocheck_zint_organisation_geo_polys CASCADE;
-create or replace view public.geocheck_zint_organisation_geo_polys as
+drop view if exists public.geocheck_zint_organisation_polys CASCADE;
+create or replace view public.geocheck_zint_organisation_polys as
 	select org_guid, org_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
 	from (select org_guid, org_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_organisation_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_organisation_pts where shapeenum = 'Polygon' 
 		order by org_guid, org_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by org_guid, org_localid, shape_id, geospatialinfo_guid having count(*) > 2
 	order by org_guid;
 						
 -- create view to list only low-vertex polygons
-drop view if exists public.geocheck_organisation_geo_polys_few_vertices CASCADE;
-create or replace view public.geocheck_organisation_geo_polys_few_vertices as
+drop view if exists public.geocheck_obj_organisation_few_vertices_polys CASCADE;
+create or replace view public.geocheck_obj_organisation_few_vertices_polys as
 	select org_guid, org_localid, shape_id, count(*) as pointcount
 	from (select org_guid, org_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
-		from public.geocheck_zint_organisation_geo_pts where shapeenum = 'Polygon' 
+		from public.geocheck_zint_organisation_pts where shapeenum = 'Polygon' 
 		order by org_guid, org_localid, shape_id, geospatialinfo_guid, pointno) as values 
 	group by org_guid, org_localid, shape_id, geospatialinfo_guid having count(*) < 3
 	order by org_guid;
 
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_zint_organisation_geo_valid_polys CASCADE;
-create view public.geocheck_zint_organisation_geo_valid_polys as
-	select org_guid, org_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_organisation_geo_polys where ST_IsValid(shape) = 't';
+drop view if exists public.geocheck_zint_organisation_valid_polys CASCADE;
+create view public.geocheck_zint_organisation_valid_polys as
+	select org_guid, org_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.geocheck_zint_organisation_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid multi-part polygons within that view (extracts valid polygons only)
-drop view if exists public.geocheck_organisation_geo_valid_multipart_polys CASCADE;
-create view public.geocheck_organisation_geo_valid_multipart_polys as
+drop view if exists public.geocheck_zint_organisation_valid_multipart_polys CASCADE;
+create view public.geocheck_zint_organisation_valid_multipart_polys as
     select org_localid, st_collect(shape), substr(st_asewkt(st_collect(st_exteriorring(shape))),11) as wkt, st_summary(st_collect(shape))
-        from public.geocheck_zint_organisation_geo_polys 
+        from public.geocheck_zint_organisation_polys 
         group by org_localid
         having org_localid in (  select org_localid 
-                                    from public.geocheck_zint_organisation_geo_pts 
+                                    from public.geocheck_zint_organisation_pts 
                                     where shapeenum = 'Polygon' 
                                     group by org_localid 
                                     having count(distinct(geospatialinfo_guid)) > 1 
                                     order by 1);
 									
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
-drop view if exists public.geocheck_organisation_geo_invalid_polys CASCADE;
-create view public.geocheck_organisation_geo_invalid_polys as
-	select org_guid, org_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_organisation_geo_polys where ST_IsValid(shape) = 'f';
+drop view if exists public.geocheck_obj_organisation_invalid_polys CASCADE;
+create view public.geocheck_obj_organisation_invalid_polys as
+	select org_guid, org_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.geocheck_zint_organisation_polys where ST_IsValid(shape) = 'f';
 
 -------------------------------
 -- Begin distance between consecutive points section
@@ -1420,7 +1420,7 @@ drop view if exists public.geocheck_duplicate_polygon_polyid CASCADE;
 create or replace view public.geocheck_duplicate_polygon_polyid as
 
 	(select
-		'HAZARD',
+		'HAZARD' as object_type,
 		hazard.hazard_guid,
 		hazard.hazard_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1436,7 +1436,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	order by 3)
 	union
 	(select
-		'HAZARD REDUCTION',
+		'HAZARD REDUCTION' as object_type,
 		hazreduc.hazreduc_guid,
 		hazreduc.hazreduc_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1452,7 +1452,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	order by 3)
 	union
 	(select
-		'ACCIDENT',
+		'ACCIDENT' as object_type,
 		accident.accident_guid,
 		accident.accident_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1468,7 +1468,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	order by 3)
 	union
 	(select
-		'MRE',
+		'MRE' as object_type,
 		mre.mre_guid,
 		mre.mre_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1484,7 +1484,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	order by 3)
 	union
 	(select
-		'QA',
+		'QA' as object_type,
 		qa.qa_guid,
 		qa.qa_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1500,7 +1500,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	order by 3)
 	union
 	(select
-		'VICTIM',
+		'VICTIM' as object_type,
 		victim.victim_guid,
 		victim.victim_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1516,7 +1516,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	order by 3)
 	union
 	(select
-		'GAZETTEER',
+		'GAZETTEER' as object_type,
 		gazetteer.gazetteer_guid,
 		gazetteer.gazetteer_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1532,7 +1532,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	order by 3)
 	union
 	(select
-		'LOCATION',
+		'LOCATION' as object_type,
 		location.location_guid,
 		location.location_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1548,7 +1548,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	order by 3)
 	union
 	(select
-		'PLACE',
+		'PLACE' as object_type,
 		place.place_guid,
 		place.place_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1564,7 +1564,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	order by 3)
 	union
 	(select
-		'VICTIM ASSISTANCE',
+		'VICTIM ASSISTANCE' as object_type,
 		victim_assistance.guid,
 		victim_assistance.localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1580,7 +1580,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	order by 3)
 	union
 	(select
-		'TASK',
+		'TASK' as object_type,
 		task.guid,
 		task.localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1596,7 +1596,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	order by 3)
 	union
 	(select
-		'ORGANISATION',
+		'ORGANISATION' as object_type,
 		organisation.org_guid,
 		organisation.org_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1620,7 +1620,7 @@ drop view if exists public.geocheck_duplicate_polygon_polyid_trimmed CASCADE;
 create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 
 	(select
-		'HAZARD',
+		'HAZARD' as object_type,
 		hazard.hazard_guid,
 		hazard.hazard_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1636,7 +1636,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	order by 3)
 	union
 	(select
-		'HAZARD REDUCTION',
+		'HAZARD REDUCTION' as object_type,
 		hazreduc.hazreduc_guid,
 		hazreduc.hazreduc_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1652,7 +1652,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	order by 3)
 	union
 	(select
-		'ACCIDENT',
+		'ACCIDENT' as object_type,
 		accident.accident_guid,
 		accident.accident_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1668,7 +1668,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	order by 3)
 	union
 	(select
-		'MRE',
+		'MRE' as object_type,
 		mre.mre_guid,
 		mre.mre_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1684,7 +1684,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	order by 3)
 	union
 	(select
-		'QA',
+		'QA' as object_type,
 		qa.qa_guid,
 		qa.qa_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1700,7 +1700,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	order by 3)
 	union
 	(select
-		'VICTIM',
+		'VICTIM' as object_type,
 		victim.victim_guid,
 		victim.victim_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1716,7 +1716,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	order by 3)
 	union
 	(select
-		'GAZETTEER',
+		'GAZETTEER' as object_type,
 		gazetteer.gazetteer_guid,
 		gazetteer.gazetteer_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1732,7 +1732,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	order by 3)
 	union
 	(select
-		'LOCATION',
+		'LOCATION' as object_type,
 		location.location_guid,
 		location.location_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1748,7 +1748,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	order by 3)
 	union
 	(select
-		'PLACE',
+		'PLACE' as object_type,
 		place.place_guid,
 		place.place_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1764,7 +1764,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	order by 3)
 	union
 	(select
-		'VICTIM ASSISTANCE',
+		'VICTIM ASSISTANCE' as object_type,
 		victim_assistance.guid,
 		victim_assistance.localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1780,7 +1780,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	order by 3)
 	union
 	(select
-		'TASK',
+		'TASK' as object_type,
 		task.guid,
 		task.localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1796,7 +1796,7 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	order by 3)
 	union
 	(select
-		'ORGANISATION',
+		'ORGANISATION' as object_type,
 		organisation.org_guid,
 		organisation.org_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
@@ -1820,7 +1820,7 @@ drop view if exists public.geocheck_duplicate_point_point_localid CASCADE;
 create or replace view public.geocheck_duplicate_point_point_localid as
 
 	(select
-		'HAZARD',
+		'HAZARD' as object_type,
 		hazard.hazard_guid,
 		hazard.hazard_localid,
 		geopoint.pointlocal_id,
@@ -1838,7 +1838,7 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	order by 3)
 	union
 	(select
-		'HAZARD REDUCTION',
+		'HAZARD REDUCTION' as object_type,
 		hazreduc.hazreduc_guid,
 		hazreduc.hazreduc_localid,
 		geopoint.pointlocal_id,
@@ -1856,7 +1856,7 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	order by 3)
 	union
 	(select
-		'ACCIDENT',
+		'ACCIDENT' as object_type,
 		accident.accident_guid,
 		accident.accident_localid,
 		geopoint.pointlocal_id,
@@ -1874,7 +1874,7 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	order by 3)
 	union
 	(select
-		'MRE',
+		'MRE' as object_type,
 		mre.mre_guid,
 		mre.mre_localid,
 		geopoint.pointlocal_id,
@@ -1892,7 +1892,7 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	order by 3)
 	union
 	(select
-		'QA',
+		'QA' as object_type,
 		qa.qa_guid,
 		qa.qa_localid,
 		geopoint.pointlocal_id,
@@ -1910,7 +1910,7 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	order by 3)
 	union
 	(select
-		'VICTIM',
+		'VICTIM' as object_type,
 		victim.victim_guid,
 		victim.victim_localid,
 		geopoint.pointlocal_id,
@@ -1928,7 +1928,7 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	order by 3)
 	union
 	(select
-		'GAZETTEER',
+		'GAZETTEER' as object_type,
 		gazetteer.gazetteer_guid,
 		gazetteer.gazetteer_localid,
 		geopoint.pointlocal_id,
@@ -1946,7 +1946,7 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	order by 3)
 	union
 	(select
-		'LOCATION',
+		'LOCATION' as object_type,
 		location.location_guid,
 		location.location_localid,
 		geopoint.pointlocal_id,
@@ -1964,7 +1964,7 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	order by 3)
 	union
 	(select
-		'PLACE',
+		'PLACE' as object_type,
 		place.place_guid,
 		place.place_localid,
 		geopoint.pointlocal_id,
@@ -1982,7 +1982,7 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	order by 3)
 	union
 	(select
-		'VICTIM ASSISTANCE',
+		'VICTIM ASSISTANCE' as object_type,
 		victim_assistance.guid,
 		victim_assistance.localid,
 		geopoint.pointlocal_id,
@@ -2000,7 +2000,7 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	order by 3)
 	union
 	(select
-		'TASK',
+		'TASK' as object_type,
 		task.guid,
 		task.localid,
 		geopoint.pointlocal_id,
@@ -2018,7 +2018,7 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	order by 3)
 	union
 	(select
-		'ORGANISATION',
+		'ORGANISATION' as object_type,
 		organisation.org_guid,
 		organisation.org_localid,
 		geopoint.pointlocal_id,
@@ -2044,7 +2044,7 @@ drop view if exists public.geocheck_duplicate_point_point_localid_trimmed CASCAD
 create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 
 	(select
-		'HAZARD',
+		'HAZARD' as object_type,
 		hazard.hazard_guid,
 		hazard.hazard_localid,
 		trim(geopoint.pointlocal_id),
@@ -2062,7 +2062,7 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	order by 3)
 	union
 	(select
-		'HAZARD REDUCTION',
+		'HAZARD REDUCTION' as object_type,
 		hazreduc.hazreduc_guid,
 		hazreduc.hazreduc_localid,
 		trim(geopoint.pointlocal_id),
@@ -2080,7 +2080,7 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	order by 3)
 	union
 	(select
-		'ACCIDENT',
+		'ACCIDENT' as object_type,
 		accident.accident_guid,
 		accident.accident_localid,
 		trim(geopoint.pointlocal_id),
@@ -2098,7 +2098,7 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	order by 3)
 	union
 	(select
-		'MRE',
+		'MRE' as object_type,
 		mre.mre_guid,
 		mre.mre_localid,
 		trim(geopoint.pointlocal_id),
@@ -2116,7 +2116,7 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	order by 3)
 	union
 	(select
-		'QA',
+		'QA' as object_type,
 		qa.qa_guid,
 		qa.qa_localid,
 		trim(geopoint.pointlocal_id),
@@ -2134,7 +2134,7 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	order by 3)
 	union
 	(select
-		'VICTIM',
+		'VICTIM' as object_type,
 		victim.victim_guid,
 		victim.victim_localid,
 		trim(geopoint.pointlocal_id),
@@ -2152,7 +2152,7 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	order by 3)
 	union
 	(select
-		'GAZETTEER',
+		'GAZETTEER' as object_type,
 		gazetteer.gazetteer_guid,
 		gazetteer.gazetteer_localid,
 		trim(geopoint.pointlocal_id),
@@ -2170,7 +2170,7 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	order by 3)
 	union
 	(select
-		'LOCATION',
+		'LOCATION' as object_type,
 		location.location_guid,
 		location.location_localid,
 		trim(geopoint.pointlocal_id),
@@ -2188,7 +2188,7 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	order by 3)
 	union
 	(select
-		'PLACE',
+		'PLACE' as object_type,
 		place.place_guid,
 		place.place_localid,
 		trim(geopoint.pointlocal_id),
@@ -2206,7 +2206,7 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	order by 3)
 	union
 	(select
-		'VICTIM ASSISTANCE',
+		'VICTIM ASSISTANCE' as object_type,
 		victim_assistance.guid,
 		victim_assistance.localid,
 		trim(geopoint.pointlocal_id),
@@ -2224,7 +2224,7 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	order by 3)
 	union
 	(select
-		'TASK',
+		'TASK' as object_type,
 		task.guid,
 		task.localid,
 		trim(geopoint.pointlocal_id),
@@ -2242,7 +2242,7 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	order by 3)
 	union
 	(select
-		'ORGANISATION',
+		'ORGANISATION' as object_type,
 		organisation.org_guid,
 		organisation.org_localid,
 		trim(geopoint.pointlocal_id),
@@ -2268,7 +2268,7 @@ drop view if exists public.geocheck_duplicate_polygon_point_localid CASCADE;
 create or replace view public.geocheck_duplicate_polygon_point_localid as
 
 	(select
-		'HAZARD',
+		'HAZARD' as object_type,
 		hazard.hazard_guid,
 		hazard.hazard_localid,
 		geospatialinfo.shape_id,
@@ -2287,7 +2287,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 	order by 3)
 	union
 	(select
-		'HAZARD REDUCTION',
+		'HAZARD REDUCTION' as object_type,
 		hazreduc.hazreduc_guid,
 		hazreduc.hazreduc_localid,
 		geospatialinfo.shape_id,
@@ -2306,7 +2306,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 	order by 3)
 	union
 	(select
-		'ACCIDENT',
+		'ACCIDENT' as object_type,
 		accident.accident_guid,
 		accident.accident_localid,
 		geospatialinfo.shape_id,
@@ -2325,7 +2325,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 	order by 3)
 	union
 	(select
-		'MRE',
+		'MRE' as object_type,
 		mre.mre_guid,
 		mre.mre_localid,
 		geospatialinfo.shape_id,
@@ -2344,7 +2344,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 	order by 3)
 	union
 	(select
-		'QA',
+		'QA' as object_type,
 		qa.qa_guid,
 		qa.qa_localid,
 		geospatialinfo.shape_id,
@@ -2363,7 +2363,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 	order by 3)
 	union
 	(select
-		'VICTIM',
+		'VICTIM' as object_type,
 		victim.victim_guid,
 		victim.victim_localid,
 		geospatialinfo.shape_id,
@@ -2382,7 +2382,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 	order by 3)
 	union
 	(select
-		'GAZETTEER',
+		'GAZETTEER' as object_type,
 		gazetteer.gazetteer_guid,
 		gazetteer.gazetteer_localid,
 		geospatialinfo.shape_id,
@@ -2401,7 +2401,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 	order by 3)
 	union
 	(select
-		'LOCATION',
+		'LOCATION' as object_type,
 		location.location_guid,
 		location.location_localid,
 		geospatialinfo.shape_id,
@@ -2420,7 +2420,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 	order by 3)
 	union
 	(select
-		'PLACE',
+		'PLACE' as object_type,
 		place.place_guid,
 		place.place_localid,
 		geospatialinfo.shape_id,
@@ -2439,7 +2439,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 	order by 3)
 	union
 	(select
-		'VICTIM ASSISTANCE',
+		'VICTIM ASSISTANCE' as object_type,
 		victim_assistance.guid,
 		victim_assistance.localid,
 		geospatialinfo.shape_id,
@@ -2458,7 +2458,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 	order by 3)
 	union
 	(select
-		'TASK',
+		'TASK' as object_type,
 		task.guid,
 		task.localid,
 		geospatialinfo.shape_id,
@@ -2477,7 +2477,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 	order by 3)
 	union
 	(select
-		'ORGANISATION',
+		'ORGANISATION' as object_type,
 		organisation.org_guid,
 		organisation.org_localid,
 		geospatialinfo.shape_id,
@@ -2504,7 +2504,7 @@ drop view if exists public.geocheck_duplicate_polygon_point_localid_dist_and_bea
 create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_bear as
 
 	(select
-		'HAZARD',
+		'HAZARD' as object_type,
 		hazard.hazard_guid,
 		hazard.hazard_localid,
 		geospatialinfo.shape_id,
@@ -2523,7 +2523,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'HAZARD REDUCTION',
+		'HAZARD REDUCTION' as object_type,
 		hazreduc.hazreduc_guid,
 		hazreduc.hazreduc_localid,
 		geospatialinfo.shape_id,
@@ -2542,7 +2542,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'ACCIDENT',
+		'ACCIDENT' as object_type,
 		accident.accident_guid,
 		accident.accident_localid,
 		geospatialinfo.shape_id,
@@ -2561,7 +2561,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'MRE',
+		'MRE' as object_type,
 		mre.mre_guid,
 		mre.mre_localid,
 		geospatialinfo.shape_id,
@@ -2580,7 +2580,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'QA',
+		'QA' as object_type,
 		qa.qa_guid,
 		qa.qa_localid,
 		geospatialinfo.shape_id,
@@ -2599,7 +2599,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'VICTIM',
+		'VICTIM' as object_type,
 		victim.victim_guid,
 		victim.victim_localid,
 		geospatialinfo.shape_id,
@@ -2618,7 +2618,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'GAZETTEER',
+		'GAZETTEER' as object_type,
 		gazetteer.gazetteer_guid,
 		gazetteer.gazetteer_localid,
 		geospatialinfo.shape_id,
@@ -2637,7 +2637,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'LOCATION',
+		'LOCATION' as object_type,
 		location.location_guid,
 		location.location_localid,
 		geospatialinfo.shape_id,
@@ -2656,7 +2656,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'PLACE',
+		'PLACE' as object_type,
 		place.place_guid,
 		place.place_localid,
 		geospatialinfo.shape_id,
@@ -2675,7 +2675,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'VICTIM ASSISTANCE',
+		'VICTIM ASSISTANCE' as object_type,
 		victim_assistance.guid,
 		victim_assistance.localid,
 		geospatialinfo.shape_id,
@@ -2694,7 +2694,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'TASK',
+		'TASK' as object_type,
 		task.guid,
 		task.localid,
 		geospatialinfo.shape_id,
@@ -2713,7 +2713,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'ORGANISATION',
+		'ORGANISATION' as object_type,
 		organisation.org_guid,
 		organisation.org_localid,
 		geospatialinfo.shape_id,
@@ -2740,7 +2740,7 @@ drop view if exists public.geocheck_duplicate_polygon_point_localid_trimmed CASC
 create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed as
 
 	(select
-		'HAZARD',
+		'HAZARD' as object_type,
 		hazard.hazard_guid,
 		hazard.hazard_localid,
 		geospatialinfo.shape_id,
@@ -2759,7 +2759,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	order by 3)
 	union
 	(select
-		'HAZARD REDUCTION',
+		'HAZARD REDUCTION' as object_type,
 		hazreduc.hazreduc_guid,
 		hazreduc.hazreduc_localid,
 		geospatialinfo.shape_id,
@@ -2778,7 +2778,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	order by 3)
 	union
 	(select
-		'ACCIDENT',
+		'ACCIDENT' as object_type,
 		accident.accident_guid,
 		accident.accident_localid,
 		geospatialinfo.shape_id,
@@ -2797,7 +2797,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	order by 3)
 	union
 	(select
-		'MRE',
+		'MRE' as object_type,
 		mre.mre_guid,
 		mre.mre_localid,
 		geospatialinfo.shape_id,
@@ -2816,7 +2816,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	order by 3)
 	union
 	(select
-		'QA',
+		'QA' as object_type,
 		qa.qa_guid,
 		qa.qa_localid,
 		geospatialinfo.shape_id,
@@ -2835,7 +2835,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	order by 3)
 	union
 	(select
-		'VICTIM',
+		'VICTIM' as object_type,
 		victim.victim_guid,
 		victim.victim_localid,
 		geospatialinfo.shape_id,
@@ -2854,7 +2854,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	order by 3)
 	union
 	(select
-		'GAZETTEER',
+		'GAZETTEER' as object_type,
 		gazetteer.gazetteer_guid,
 		gazetteer.gazetteer_localid,
 		geospatialinfo.shape_id,
@@ -2873,7 +2873,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	order by 3)
 	union
 	(select
-		'LOCATION',
+		'LOCATION' as object_type,
 		location.location_guid,
 		location.location_localid,
 		geospatialinfo.shape_id,
@@ -2892,7 +2892,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	order by 3)
 	union
 	(select
-		'PLACE',
+		'PLACE' as object_type,
 		place.place_guid,
 		place.place_localid,
 		geospatialinfo.shape_id,
@@ -2911,7 +2911,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	order by 3)
 	union
 	(select
-		'VICTIM ASSISTANCE',
+		'VICTIM ASSISTANCE' as object_type,
 		victim_assistance.guid,
 		victim_assistance.localid,
 		geospatialinfo.shape_id,
@@ -2930,7 +2930,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	order by 3)
 	union
 	(select
-		'TASK',
+		'TASK' as object_type,
 		task.guid,
 		task.localid,
 		geospatialinfo.shape_id,
@@ -2949,7 +2949,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	order by 3)
 	union
 	(select
-		'ORGANISATION',
+		'ORGANISATION' as object_type,
 		organisation.org_guid,
 		organisation.org_localid,
 		geospatialinfo.shape_id,
@@ -2976,7 +2976,7 @@ drop view if exists public.geocheck_duplicate_polygon_point_localid_dist_and_bea
 create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_bear_trimmed as
 
 	(select
-		'HAZARD',
+		'HAZARD' as object_type,
 		hazard.hazard_guid,
 		hazard.hazard_localid,
 		geospatialinfo.shape_id,
@@ -2995,7 +2995,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'HAZARD REDUCTION',
+		'HAZARD REDUCTION' as object_type,
 		hazreduc.hazreduc_guid,
 		hazreduc.hazreduc_localid,
 		geospatialinfo.shape_id,
@@ -3014,7 +3014,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'ACCIDENT',
+		'ACCIDENT' as object_type,
 		accident.accident_guid,
 		accident.accident_localid,
 		geospatialinfo.shape_id,
@@ -3033,7 +3033,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'MRE',
+		'MRE' as object_type,
 		mre.mre_guid,
 		mre.mre_localid,
 		geospatialinfo.shape_id,
@@ -3052,7 +3052,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'QA',
+		'QA' as object_type,
 		qa.qa_guid,
 		qa.qa_localid,
 		geospatialinfo.shape_id,
@@ -3071,7 +3071,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'VICTIM',
+		'VICTIM' as object_type,
 		victim.victim_guid,
 		victim.victim_localid,
 		geospatialinfo.shape_id,
@@ -3090,7 +3090,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'GAZETTEER',
+		'GAZETTEER' as object_type,
 		gazetteer.gazetteer_guid,
 		gazetteer.gazetteer_localid,
 		geospatialinfo.shape_id,
@@ -3109,7 +3109,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'LOCATION',
+		'LOCATION' as object_type,
 		location.location_guid,
 		location.location_localid,
 		geospatialinfo.shape_id,
@@ -3128,7 +3128,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'PLACE',
+		'PLACE' as object_type,
 		place.place_guid,
 		place.place_localid,
 		geospatialinfo.shape_id,
@@ -3147,7 +3147,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'VICTIM ASSISTANCE',
+		'VICTIM ASSISTANCE' as object_type,
 		victim_assistance.guid,
 		victim_assistance.localid,
 		geospatialinfo.shape_id,
@@ -3166,7 +3166,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'TASK',
+		'TASK' as object_type,
 		task.guid,
 		task.localid,
 		geospatialinfo.shape_id,
@@ -3185,7 +3185,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_
 	order by 3)
 	union
 	(select
-		'ORGANISATION',
+		'ORGANISATION' as object_type,
 		organisation.org_guid,
 		organisation.org_localid,
 		geospatialinfo.shape_id,
@@ -3213,133 +3213,133 @@ drop view if exists public.geocheck_duplicate_polygons CASCADE;
 create or replace view public.geocheck_duplicate_polygons as
 
 	(select
-		'HAZARD',
+		'HAZARD' as object_type,
 		hazard_guid,
 		hazard_localid,
 		shape,
 		count(*)
-	from geocheck_hazard_geo_polys
+	from geocheck_zint_hazard_polys
 	group by hazard_guid, hazard_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'HAZARD REDUCTION',
+		'HAZARD REDUCTION' as object_type,
 		hazreduc_guid,
 		hazreduc_localid,
 		shape,
 		count(*)
-	from geocheck_hazreduc_geo_polys
+	from geocheck_zint_hazreduc_polys
 	group by hazreduc_guid, hazreduc_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'ACCIDENT',
+		'ACCIDENT' as object_type,
 		accident_guid,
 		accident_localid,
 		shape,
 		count(*)
-	from geocheck_accident_geo_polys
+	from geocheck_zint_accident_polys
 	group by accident_guid, accident_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'MRE',
+		'MRE' as object_type,
 		mre_guid,
 		mre_localid,
 		shape,
 		count(*)
-	from geocheck_mre_geo_polys
+	from geocheck_zint_mre_polys
 	group by mre_guid, mre_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'QA',
+		'QA' as object_type,
 		qa_guid,
 		qa_localid,
 		shape,
 		count(*)
-	from geocheck_qa_geo_polys
+	from geocheck_zint_qa_polys
 	group by qa_guid, qa_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'VICTIM',
+		'VICTIM' as object_type,
 		victim_guid,
 		victim_localid,
 		shape,
 		count(*)
-	from geocheck_victim_geo_polys
+	from geocheck_zint_victim_polys
 	group by victim_guid, victim_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'GAZETTEER',
+		'GAZETTEER' as object_type,
 		gazetteer_guid,
 		gazetteer_localid,
 		shape,
 		count(*)
-	from geocheck_gazetteer_geo_polys
+	from geocheck_zint_gazetteer_polys
 	group by gazetteer_guid, gazetteer_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'LOCATION',
+		'LOCATION' as object_type,
 		location_guid,
 		location_localid,
 		shape,
 		count(*)
-	from geocheck_location_geo_polys
+	from geocheck_zint_location_polys
 	group by location_guid, location_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'PLACE',
+		'PLACE' as object_type,
 		place_guid,
 		place_localid,
 		shape,
 		count(*)
-	from geocheck_place_geo_polys
+	from geocheck_zint_place_polys
 	group by place_guid, place_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'VICTIM ASSISTANCE',
+		'VICTIM ASSISTANCE' as object_type,
 		guid,
 		localid,
 		shape,
 		count(*)
-	from geocheck_victim_assistance_geo_polys
+	from geocheck_zint_victim_assistance_polys
 	group by guid, localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'TASK',
+		'TASK' as object_type,
 		guid,
 		localid,
 		shape,
 		count(*)
-	from geocheck_task_geo_polys
+	from geocheck_zint_task_polys
 	group by guid, localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'ORGANISATION',
+		'ORGANISATION' as object_type,
 		org_guid,
 		org_localid,
 		shape,
 		count(*)
-	from geocheck_organisation_geo_polys
+	from geocheck_zint_organisation_polys
 	group by org_guid, org_localid, shape
 	having count(*) > 1
 	order by 3)
@@ -3349,148 +3349,148 @@ create or replace view public.geocheck_duplicate_polygons as
 -- Begin duplicate points in polygon section
 -------------------------------
 
-drop view if exists public.geocheck_duplicate_points_in_polygons CASCADE; 
-create or replace view public.geocheck_duplicate_points_in_polygons as
+drop view if exists public.geocheck_duplicate_polygon_points CASCADE; 
+create or replace view public.geocheck_duplicate_polygon_points as
 	(select
-		'HAZARD',
+		'HAZARD' as object_type,
 		hazard_guid,
 		hazard_localid,
 		shape_id,
 		shape,
 		count(*)
-	from geocheck_hazard_geo_pts
+	from geocheck_zint_hazard_pts
 	group by hazard_guid, hazard_localid, shape_id, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'HAZARD REDUCTION',
+		'HAZARD REDUCTION' as object_type,
 		hazreduc_guid,
 		hazreduc_localid,
 		shape_id,
 		shape,
 		count(*)
-	from geocheck_hazreduc_geo_polys
+	from geocheck_zint_hazreduc_polys
 	group by hazreduc_guid, hazreduc_localid, shape_id, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'ACCIDENT',
+		'ACCIDENT' as object_type,
 		accident_guid,
 		accident_localid,
 		shape_id,
 		shape,
 		count(*)
-	from geocheck_accident_geo_polys
+	from geocheck_zint_accident_polys
 	group by accident_guid, accident_localid, shape_id, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'MRE',
+		'MRE' as object_type,
 		mre_guid,
 		mre_localid,
 		shape_id,
 		shape,
 		count(*)
-	from geocheck_mre_geo_polys
+	from geocheck_zint_mre_polys
 	group by mre_guid, mre_localid, shape_id, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'QA',
+		'QA' as object_type,
 		qa_guid,
 		qa_localid,
 		shape_id,
 		shape,
 		count(*)
-	from geocheck_qa_geo_polys
+	from geocheck_zint_qa_polys
 	group by qa_guid, qa_localid, shape_id, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'VICTIM',
+		'VICTIM' as object_type,
 		victim_guid,
 		victim_localid,
 		shape_id,
 		shape,
 		count(*)
-	from geocheck_victim_geo_polys
+	from geocheck_zint_victim_polys
 	group by victim_guid, victim_localid, shape_id, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'GAZETTEER',
+		'GAZETTEER' as object_type,
 		gazetteer_guid,
 		gazetteer_localid,
 		shape_id,
 		shape,
 		count(*)
-	from geocheck_gazetteer_geo_polys
+	from geocheck_zint_gazetteer_polys
 	group by gazetteer_guid, gazetteer_localid, shape_id, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'LOCATION',
+		'LOCATION' as object_type,
 		location_guid,
 		location_localid,
 		shape_id,
 		shape,
 		count(*)
-	from geocheck_location_geo_polys
+	from geocheck_zint_location_polys
 	group by location_guid, location_localid, shape_id, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'PLACE',
+		'PLACE' as object_type,
 		place_guid,
 		place_localid,
 		shape_id,
 		shape,
 		count(*)
-	from geocheck_place_geo_polys
+	from geocheck_zint_place_polys
 	group by place_guid, place_localid, shape_id, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'VICTIM ASSISTANCE',
+		'VICTIM ASSISTANCE' as object_type,
 		guid,
 		localid,
 		shape_id,
 		shape,
 		count(*)
-	from geocheck_victim_assistance_geo_polys
+	from geocheck_zint_victim_assistance_polys
 	group by guid, localid, shape_id, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'TASK',
+		'TASK' as object_type,
 		guid,
 		localid,
 		shape_id,
 		shape,
 		count(*)
-	from geocheck_task_geo_polys
+	from geocheck_zint_task_polys
 	group by guid, localid, shape_id, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
-		'ORGANISATION',
+		'ORGANISATION' as object_type,
 		org_guid,
 		org_localid,
 		shape_id,
 		shape,
 		count(*)
-	from geocheck_organisation_geo_polys
+	from geocheck_zint_organisation_polys
 	group by org_guid, org_localid, shape_id, shape
 	having count(*) > 1
 	order by 3)

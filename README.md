@@ -40,7 +40,7 @@ There are 2 types of views:
 
 ## Detailed description
 
-### geocheck_obj_**!TYPE!**_invalid_polys
+### geocheck_obj_**!type!**_invalid_polys
 List of invalid polygons for each IMSMAng object type.  
 **This view must be empty. If not, issues must be fixed manually in IMSMAng.**
 

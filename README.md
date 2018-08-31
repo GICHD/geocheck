@@ -10,6 +10,8 @@ The checks look at a variety of possible issues:
   - duplicate information (polygon, point, point or polygon id)
   - distance between points in a polygon
 
+The SQL script drop_views.sql can be used to remove all views from IMSMAng.
+
 ## Views available
 There are 2 types of views:
   - Geo Check: they provides identified issues that need to be looked at.

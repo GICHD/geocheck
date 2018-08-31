@@ -54,7 +54,7 @@ List of invalid polygons for each IMSMAng object type.
 | st_isvalidreason | Reason why the polygon is invalid |
 | st_summary | Polygon description |
 
-[view list](#views-available)
+[View list](#views-available)
 
 ### geocheck_obj_**!TYPE!**_few_vertices_polys
 List of polygons defined with less than 3 vertices for each IMSMAng object type.  
@@ -66,6 +66,8 @@ List of polygons defined with less than 3 vertices for each IMSMAng object type.
 | **!TYPE!**_localid | IMSMAng localid |
 | shape_id | IMSMAng polygon shapeid |
 | pointcount | Number of vertices |
+
+[View list](#views-available)
 
 ### geocheck_duplicate_polygons
 List of duplicate polygons based on coordinates in a record for each IMSMAng object type.  
@@ -79,6 +81,8 @@ List of duplicate polygons based on coordinates in a record for each IMSMAng obj
 | shape | Postgis geometry |
 | count | Number of duplicate polygons for each record|
 
+[View list](#views-available)
+
 ### geocheck_duplicate_polygon_polyid
 List of duplicate polygons based on shape id in a record for each IMSMAng object type.
 **This view must be empty. If not, issues must be fixed manually in IMSMAng.**  
@@ -91,6 +95,8 @@ List of duplicate polygons based on shape id in a record for each IMSMAng object
 | shapeenum | IMSMAng shape type |
 | count | Number of duplicate polygons based on shapeid for each record|
 
+[View list](#views-available)
+
 ### geocheck_duplicate_polygon_polyid_trimmed
 List of duplicate polygons based on trimmed shape id in a record for each IMSMAng object type. Trim helps to find if space characters have been added by mistake at the end of the shape id.  
 **This view must be empty. If not, issues must be fixed manually in IMSMAng.**  
@@ -102,6 +108,8 @@ List of duplicate polygons based on trimmed shape id in a record for each IMSMAn
 | **!TYPE!**_localid | IMSMAng localid |
 | shapeenum | IMSMAng shape type |
 | count | Number of duplicate polygons based on shapeid for each record|
+
+[View list](#views-available)
 
 ### geocheck_duplicate_polygon_points
 List of duplicate points based on coordinates in a polygon for each IMSMAng object type.  
@@ -116,6 +124,8 @@ The issues in the geocheck_duplicate_polygons views must be fixed first before l
 | shapeid | IMSMAng polygon shapeid |
 | shape | Postgis geometry |
 | count | Number of duplicate points based on coordinates for each polygon in each record|
+
+[View list](#views-available)
 
 ### geocheck_duplicate_polygon_point_localid
 List of duplicate points based on localid in a polygon for each IMSMAng object type.  
@@ -132,6 +142,8 @@ The issues in the geocheck_duplicate_polygons and geocheck_duplicate_polygon_poi
 | pointtypeenum | IMSMAng point type |
 | count | Number of duplicate points based on localid for each polygon in each record|
 
+[View list](#views-available)
+
 ### geocheck_duplicate_polygon_point_localid_trimmed
 List of duplicate points based on trimmed localid in a polygon for each IMSMAng object type.  Trim helps to find if space characters have been added by mistake at the end of the localid.  
 **This view must be empty. If not, issues must be fixed manually in IMSMAng.**  
@@ -147,6 +159,8 @@ The issues in the geocheck_duplicate_polygons and geocheck_duplicate_polygon_poi
 | pointtypeenum | IMSMAng point type |
 | count | Number of duplicate points based on localid for each polygon in each record|
 
+[View list](#views-available)
+
 ### geocheck_duplicate_points
 List of duplicate points based on coordinates NOT in a polygon for each IMSMAng object type.  
 **This view must be empty. If not, issues must be fixed manually in IMSMAng.**  
@@ -160,7 +174,9 @@ List of duplicate points based on coordinates NOT in a polygon for each IMSMAng 
 | shape | Postgis geometry |
 | count | Number of duplicate points based on coordinates for each polygon in each record|
 
-### geocheck_duplicate_polygon_point_localid
+[View list](#views-available)
+
+### geocheck_duplicate_point_point_localid
 List of duplicate points based on localid NOT in a polygon for each IMSMAng object type.  
 **This view must be empty. If not, issues must be fixed manually in IMSMAng.**  
 The issues in the geocheck_duplicate_points view must be fixed first before looking at this view.
@@ -174,7 +190,9 @@ The issues in the geocheck_duplicate_points view must be fixed first before look
 | pointtypeenum | IMSMAng point type |
 | count | Number of duplicate points based on localid for each polygon in each record|
 
-### geocheck_duplicate_polygon_point_localid_trimmed
+[View list](#views-available)
+
+### geocheck_duplicate_point_point_localid_trimmed
 List of duplicate points based on trimmed localid NOT in a polygon for each IMSMAng object type.  Trim helps to find if space characters have been added by mistake at the end of the localid.  
 **This view must be empty. If not, issues must be fixed manually in IMSMAng.**  
 The issues in the geocheck_duplicate_points view must be fixed first before looking at this view.  
@@ -188,6 +206,8 @@ The issues in the geocheck_duplicate_points view must be fixed first before look
 | pointtypeenum | IMSMAng point type |
 | count | Number of duplicate points based on localid for each polygon in each record|
 
+[View list](#views-available)
+
 ### geocheck_distance_polygon_points
 List of polygons defined with a distance between 2 consecutive points higher than the value defined in the query (default is 5000 m). The value can be change by doing a replace all as explained at the top of the file.  
 **This view must be MOSTLY empty as there may be relevant use cases for long distance between vertices.**
@@ -198,6 +218,8 @@ List of polygons defined with a distance between 2 consecutive points higher tha
 | localid | IMSMAng localid |
 | shapeid | IMSMAng polygon shapeid |
 | distance | Distance in meters higher than the default distance used in the query |
+
+[View list](#views-available)
 
 ### geocheck_obj_**!TYPE!**_valid_polys 
 List of valid polygons for each IMSMAng object type.  
@@ -211,6 +233,8 @@ List of valid polygons for each IMSMAng object type.
 | wkt | WKT LINESTRING - can be visualize with [this webpage](https://arthur-e.github.io/Wicket/sandbox-gmaps3.html) |
 | st_summary | Polygon description |
 
+[View list](#views-available)
+
 ### geocheck_zint_**!TYPE!**_valid_multipart_polys
 List of multi polygon records.  
 
@@ -221,7 +245,9 @@ List of multi polygon records.
 | wkt | WKT MULTILINESTRING - can be visualize with [this webpage](https://arthur-e.github.io/Wicket/sandbox-gmaps3.html) |
 | st_summary | Polygon description |
 
-### geocheck_obj_**!TYPE!**_valid_polys 
+[View list](#views-available)
+
+### geocheck_zint_**!TYPE!**_polys 
 List of polygons for each IMSMAng object type.  
 
 | Field | Description|
@@ -231,6 +257,8 @@ List of polygons for each IMSMAng object type.
 | shape_id | IMSMAng polygon shapeid |
 | shape | Postgis geometry |
 | pointcount | Number of vertices for each polygon |
+
+[View list](#views-available)
 
 ### geocheck_zint_**!TYPE!**_pts
 List of points from IMSMAng.  
@@ -268,3 +296,5 @@ List of points from IMSMAng.
 | user_entered_y| y coordinate originally entered by user|
 | user_entered_mgrs| MGRS coordinate originally entered by user|
 | shape | Postgis geometry |
+
+[View list](#views-available)

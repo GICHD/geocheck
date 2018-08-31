@@ -57,6 +57,8 @@ List of invalid polygons for each IMSMAng object type.
 | st_isvalidreason | Reason why the polygon is invalid |
 | st_summary | Polygon description |
 
+[view list]{#views-available)
+
 ### geocheck_obj_**!TYPE!**_few_vertices_polys
 List of polygons defined with less than 3 vertices for each IMSMAng object type.  
 **This view must be empty. If not, issues must be fixed manually in IMSMAng.**

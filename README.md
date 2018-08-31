@@ -6,11 +6,11 @@ To create the views just copy the script in a query window in pgAdmin III or Nav
 
 The checks look at a variety of possible issues:
   - invalid polygons (IMSMAng does not check if a polygon created by a set of points is valid)
-  - polygosn with too many vertices (less than 3)
+  - polygons with too many vertices (less than 3)
   - duplicate information (polygon, point, point or polygon id)
   - distance between points in a polygon
 
-## Views available and description:
+## Views available
 There are 2 types of views:
   - Geo Check: they provides identified issues that need to be looked at.
   - Information: they are used as intermediary views to generate the Geo Check views but can provide useful information
@@ -36,7 +36,7 @@ There are 2 types of views:
 
 **!TYPE!** can be accident, gazetteer, hazard, hazreduc, location, mre, organisation, place, qa, task, victim_assistance, victim.
 
-## This section provide detail information for each view type
+## Detailed description
 
 ### geocheck_obj_**!TYPE!**_invalid_polys 
 List of invalid polygons for each IMSMAng object type.  
@@ -44,7 +44,7 @@ List of invalid polygons for each IMSMAng object type.
 
 | Field | Description|
 | --- | --- |
-| **!TYPE!**_guid | IMSMAng guid |
+| **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | shape_id | IMSMAng polygon shapeid |
 | shape | Postgis geometry |
@@ -58,7 +58,7 @@ List of polygons defined with less than 3 vertices for each IMSMAng object type.
 
 | Field | Description|
 | --- | --- |
-| **!TYPE!**_guid | IMSMAng guid |
+| **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | shape_id | IMSMAng polygon shapeid |
 | pointcount | Number of vertices |
@@ -70,7 +70,7 @@ List of duplicate polygons based on coordinates in a record for each IMSMAng obj
 | Field | Description|
 | --- | --- |
 | object_type | IMSMAng object type |
-| **!TYPE!**_guid | IMSMAng guid |
+| **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | shape | Postgis geometry |
 | count | Number of duplicate polygons for each record|
@@ -82,7 +82,7 @@ List of duplicate polygons based on shape id in a record for each IMSMAng object
 | Field | Description|
 | --- | --- |
 | object_type | IMSMAng object type |
-| **!TYPE!**_guid | IMSMAng guid |
+| **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | shapeenum | IMSMAng shape type |
 | count | Number of duplicate polygons based on shapeid for each record|
@@ -94,7 +94,7 @@ List of duplicate polygons based on trimmed shape id in a record for each IMSMAn
 | Field | Description|
 | --- | --- |
 | object_type | IMSMAng object type |
-| **!TYPE!**_guid | IMSMAng guid |
+| **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | shapeenum | IMSMAng shape type |
 | count | Number of duplicate polygons based on shapeid for each record|
@@ -107,7 +107,7 @@ The issues in the geocheck_duplicate_polygons views must be fixed first before l
 | Field | Description|
 | --- | --- |
 | object_type | IMSMAng object type |
-| **!TYPE!**_guid | IMSMAng guid |
+| **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | shapeid | IMSMAng polygon shapeid |
 | shape | Postgis geometry |
@@ -121,7 +121,7 @@ The issues in the geocheck_duplicate_polygons and geocheck_duplicate_polygon_poi
 | Field | Description|
 | --- | --- |
 | object_type | IMSMAng object type |
-| **!TYPE!**_guid | IMSMAng guid |
+| **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | shapeid | IMSMAng polygon shapeid |
 | pointlocal_id | IMSMAng point localid |
@@ -136,7 +136,7 @@ The issues in the geocheck_duplicate_polygons and geocheck_duplicate_polygon_poi
 | Field | Description|
 | --- | --- |
 | object_type | IMSMAng object type |
-| **!TYPE!**_guid | IMSMAng guid |
+| **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | shapeid | IMSMAng polygon shapeid |
 | pointlocal_id | IMSMAng point localid |
@@ -150,7 +150,7 @@ List of duplicate points based on coordinates NOT in a polygon for each IMSMAng 
 | Field | Description|
 | --- | --- |
 | object_type | IMSMAng object type |
-| **!TYPE!**_guid | IMSMAng guid |
+| **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | shapeid | IMSMAng polygon shapeid |
 | shape | Postgis geometry |
@@ -164,7 +164,7 @@ The issues in the geocheck_duplicate_points view must be fixed first before look
 | Field | Description|
 | --- | --- |
 | object_type | IMSMAng object type |
-| **!TYPE!**_guid | IMSMAng guid |
+| **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | pointlocal_id | IMSMAng point localid |
 | pointtypeenum | IMSMAng point type |
@@ -178,7 +178,7 @@ The issues in the geocheck_duplicate_points view must be fixed first before look
 | Field | Description|
 | --- | --- |
 | object_type | IMSMAng object type |
-| **!TYPE!**_guid | IMSMAng guid |
+| **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | pointlocal_id | IMSMAng point localid |
 | pointtypeenum | IMSMAng point type |
@@ -200,7 +200,7 @@ List of valid polygons for each IMSMAng object type.
 
 | Field | Description|
 | --- | --- |
-| **!TYPE!**_guid | IMSMAng guid |
+| **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | shape_id | IMSMAng polygon shapeid |
 | shape | Postgis geometry |
@@ -208,12 +208,13 @@ List of valid polygons for each IMSMAng object type.
 | st_summary | Polygon description |
 
 ### geocheck_zint_**!TYPE!**_valid_multipart_polys
+List of multi polygon records.  
 
 | Field | Description|
 | --- | --- |
 | **!TYPE!**_localid | IMSMAng localid |
 | st_collect | Postgis geometry |
-| wkt | WKT LINESTRING - can be visualize with [this webpage](https://arthur-e.github.io/Wicket/sandbox-gmaps3.html) |
+| wkt | WKT MULTILINESTRING - can be visualize with [this webpage](https://arthur-e.github.io/Wicket/sandbox-gmaps3.html) |
 | st_summary | Polygon description |
 
 ### geocheck_obj_**!TYPE!**_valid_polys 
@@ -221,7 +222,7 @@ List of polygons for each IMSMAng object type.
 
 | Field | Description|
 | --- | --- |
-| **!TYPE!**_guid | IMSMAng guid |
+| **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | shape_id | IMSMAng polygon shapeid |
 | shape | Postgis geometry |
@@ -245,5 +246,21 @@ List of points from IMSMAng.
 | pointlocal_id | IMSMAng Geopoint localid |
 | pointno | IMSMAng Geopoint number |
 | pointtypeenum | IMSMAng point type |
-| wkt | WKT LINESTRING - can be visualize with [this webpage](https://arthur-e.github.io/Wicket/sandbox-gmaps3.html) |
-| st_summary | Polygon description |
+| pointdescription | IMSMAng point description |
+| latitude | IMSMAng point latitude (WGS 1984)|
+| longitude | IMSMAng point latitude (WGS 1984)|
+| coordrefsys | Coordinate Reference System used by user when entering original coordinates|
+| fixedby_guid | IMSMAng enum GUID on how the coordinated were taken|
+| bearing| bearing information|
+| distance| distance information|
+| frompoint_guid| IMSMAng point GUID from which the distance and bearing were taken|
+| frompointinput | |
+| userinputformat | Input format used by user when entering original coordinates|
+| coordformat | Coordinate format used by user when entering original coordinates|
+| dataentrydate | Geopoint entry date in IMSMAng|
+| dataenterer | IMSMAng user who entered the geopoint|
+| elevation | Geopoint elevation information|
+| user_entered_x | x coordinate originally entered by user|
+| user_entered_y| y coordinate originally entered by user|
+| user_entered_mgrs| MGRS coordinate originally entered by user|
+| shape | Postgis geometry |

@@ -2497,242 +2497,6 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 	order by 1,3;
 
 -------------------------------
--- Begin duplicate pointlocal_id in Polygon (distance and bearing only) section
--------------------------------
-
-drop view if exists public.geocheck_duplicate_polygon_point_localid_dist_and_bear CASCADE; 
-create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_bear as
-
-	(select
-		'HAZARD' as object_type,
-		hazard.hazard_guid,
-		hazard.hazard_localid,
-		geospatialinfo.shape_id,
-		geopoint.pointlocal_id,
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join hazard_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = hazard_has_geospatialinfo.geospatialinfo_guid
-		inner join hazard on hazard_has_geospatialinfo.hazard_guid = hazard.hazard_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by hazard.hazard_guid, hazard.hazard_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'HAZARD REDUCTION' as object_type,
-		hazreduc.hazreduc_guid,
-		hazreduc.hazreduc_localid,
-		geospatialinfo.shape_id,
-		geopoint.pointlocal_id,
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join hazreduc_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = hazreduc_has_geospatialinfo.geospatialinfo_guid
-		inner join hazreduc on hazreduc_has_geospatialinfo.hazreduc_guid = hazreduc.hazreduc_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by hazreduc.hazreduc_guid, hazreduc.hazreduc_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'ACCIDENT' as object_type,
-		accident.accident_guid,
-		accident.accident_localid,
-		geospatialinfo.shape_id,
-		geopoint.pointlocal_id,
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join accident_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = accident_has_geospatialinfo.geospatialinfo_guid
-		inner join accident on accident_has_geospatialinfo.accident_guid = accident.accident_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by accident.accident_guid, accident.accident_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'MRE' as object_type,
-		mre.mre_guid,
-		mre.mre_localid,
-		geospatialinfo.shape_id,
-		geopoint.pointlocal_id,
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join mre_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = mre_has_geospatialinfo.geospatialinfo_guid
-		inner join mre on mre_has_geospatialinfo.mre_guid = mre.mre_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by mre.mre_guid, mre.mre_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'QA' as object_type,
-		qa.qa_guid,
-		qa.qa_localid,
-		geospatialinfo.shape_id,
-		geopoint.pointlocal_id,
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join qa_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = qa_has_geospatialinfo.geospatialinfo_guid
-		inner join qa on qa_has_geospatialinfo.qa_guid = qa.qa_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by qa.qa_guid, qa.qa_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'VICTIM' as object_type,
-		victim.victim_guid,
-		victim.victim_localid,
-		geospatialinfo.shape_id,
-		geopoint.pointlocal_id,
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join victim_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = victim_has_geospatialinfo.geospatialinfo_guid
-		inner join victim on victim_has_geospatialinfo.victim_guid = victim.victim_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by victim.victim_guid, victim.victim_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'GAZETTEER' as object_type,
-		gazetteer.gazetteer_guid,
-		gazetteer.gazetteer_localid,
-		geospatialinfo.shape_id,
-		geopoint.pointlocal_id,
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join gazetteer_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = gazetteer_has_geospatialinfo.geospatialinfo_guid
-		inner join gazetteer on gazetteer_has_geospatialinfo.gazetteer_guid = gazetteer.gazetteer_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by gazetteer.gazetteer_guid, gazetteer.gazetteer_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'LOCATION' as object_type,
-		location.location_guid,
-		location.location_localid,
-		geospatialinfo.shape_id,
-		geopoint.pointlocal_id,
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join location_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = location_has_geospatialinfo.geospatialinfo_guid
-		inner join location on location_has_geospatialinfo.location_guid = location.location_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by location.location_guid, location.location_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'PLACE' as object_type,
-		place.place_guid,
-		place.place_localid,
-		geospatialinfo.shape_id,
-		geopoint.pointlocal_id,
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join place_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = place_has_geospatialinfo.geospatialinfo_guid
-		inner join place on place_has_geospatialinfo.place_guid = place.place_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by place.place_guid, place.place_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'VICTIM ASSISTANCE' as object_type,
-		victim_assistance.guid,
-		victim_assistance.localid,
-		geospatialinfo.shape_id,
-		geopoint.pointlocal_id,
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join victim_assistance_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = victim_assistance_has_geospatialinfo.geospatialinfo_guid
-		inner join victim_assistance on victim_assistance_has_geospatialinfo.victim_assistance_guid = victim_assistance.guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by victim_assistance.guid, victim_assistance.localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'TASK' as object_type,
-		task.guid,
-		task.localid,
-		geospatialinfo.shape_id,
-		geopoint.pointlocal_id,
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join task_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = task_has_geospatialinfo.geospatialinfo_guid
-		inner join task on task_has_geospatialinfo.task_guid = task.guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by task.guid, task.localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'ORGANISATION' as object_type,
-		organisation.org_guid,
-		organisation.org_localid,
-		geospatialinfo.shape_id,
-		geopoint.pointlocal_id,
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join organisation_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = organisation_has_geospatialinfo.geospatialinfo_guid
-		inner join organisation on organisation_has_geospatialinfo.org_guid = organisation.org_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by organisation.org_guid, organisation.org_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	order by 1,3;
-	
--------------------------------
 -- Begin duplicate pointlocal_id in Polygon trimmed section
 -------------------------------
 
@@ -2968,243 +2732,6 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	order by 3)
 	order by 1,3;
 
--------------------------------
--- Begin duplicate pointlocal_id in Polygon (distance and bearing only) trimmed section
--------------------------------
-
-drop view if exists public.geocheck_duplicate_polygon_point_localid_dist_and_bear_trimmed CASCADE; 
-create or replace view public.geocheck_duplicate_polygon_point_localid_dist_and_bear_trimmed as
-
-	(select
-		'HAZARD' as object_type,
-		hazard.hazard_guid,
-		hazard.hazard_localid,
-		geospatialinfo.shape_id,
-		trim(geopoint.pointlocal_id),
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join hazard_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = hazard_has_geospatialinfo.geospatialinfo_guid
-		inner join hazard on hazard_has_geospatialinfo.hazard_guid = hazard.hazard_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by hazard.hazard_guid, hazard.hazard_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'HAZARD REDUCTION' as object_type,
-		hazreduc.hazreduc_guid,
-		hazreduc.hazreduc_localid,
-		geospatialinfo.shape_id,
-		trim(geopoint.pointlocal_id),
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join hazreduc_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = hazreduc_has_geospatialinfo.geospatialinfo_guid
-		inner join hazreduc on hazreduc_has_geospatialinfo.hazreduc_guid = hazreduc.hazreduc_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by hazreduc.hazreduc_guid, hazreduc.hazreduc_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'ACCIDENT' as object_type,
-		accident.accident_guid,
-		accident.accident_localid,
-		geospatialinfo.shape_id,
-		trim(geopoint.pointlocal_id),
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join accident_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = accident_has_geospatialinfo.geospatialinfo_guid
-		inner join accident on accident_has_geospatialinfo.accident_guid = accident.accident_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by accident.accident_guid, accident.accident_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'MRE' as object_type,
-		mre.mre_guid,
-		mre.mre_localid,
-		geospatialinfo.shape_id,
-		trim(geopoint.pointlocal_id),
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join mre_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = mre_has_geospatialinfo.geospatialinfo_guid
-		inner join mre on mre_has_geospatialinfo.mre_guid = mre.mre_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by mre.mre_guid, mre.mre_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'QA' as object_type,
-		qa.qa_guid,
-		qa.qa_localid,
-		geospatialinfo.shape_id,
-		trim(geopoint.pointlocal_id),
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join qa_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = qa_has_geospatialinfo.geospatialinfo_guid
-		inner join qa on qa_has_geospatialinfo.qa_guid = qa.qa_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by qa.qa_guid, qa.qa_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'VICTIM' as object_type,
-		victim.victim_guid,
-		victim.victim_localid,
-		geospatialinfo.shape_id,
-		trim(geopoint.pointlocal_id),
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join victim_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = victim_has_geospatialinfo.geospatialinfo_guid
-		inner join victim on victim_has_geospatialinfo.victim_guid = victim.victim_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by victim.victim_guid, victim.victim_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'GAZETTEER' as object_type,
-		gazetteer.gazetteer_guid,
-		gazetteer.gazetteer_localid,
-		geospatialinfo.shape_id,
-		trim(geopoint.pointlocal_id),
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join gazetteer_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = gazetteer_has_geospatialinfo.geospatialinfo_guid
-		inner join gazetteer on gazetteer_has_geospatialinfo.gazetteer_guid = gazetteer.gazetteer_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by gazetteer.gazetteer_guid, gazetteer.gazetteer_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'LOCATION' as object_type,
-		location.location_guid,
-		location.location_localid,
-		geospatialinfo.shape_id,
-		trim(geopoint.pointlocal_id),
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join location_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = location_has_geospatialinfo.geospatialinfo_guid
-		inner join location on location_has_geospatialinfo.location_guid = location.location_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by location.location_guid, location.location_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'PLACE' as object_type,
-		place.place_guid,
-		place.place_localid,
-		geospatialinfo.shape_id,
-		trim(geopoint.pointlocal_id),
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join place_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = place_has_geospatialinfo.geospatialinfo_guid
-		inner join place on place_has_geospatialinfo.place_guid = place.place_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by place.place_guid, place.place_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'VICTIM ASSISTANCE' as object_type,
-		victim_assistance.guid,
-		victim_assistance.localid,
-		geospatialinfo.shape_id,
-		trim(geopoint.pointlocal_id),
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join victim_assistance_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = victim_assistance_has_geospatialinfo.geospatialinfo_guid
-		inner join victim_assistance on victim_assistance_has_geospatialinfo.victim_assistance_guid = victim_assistance.guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by victim_assistance.guid, victim_assistance.localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'TASK' as object_type,
-		task.guid,
-		task.localid,
-		geospatialinfo.shape_id,
-		trim(geopoint.pointlocal_id),
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join task_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = task_has_geospatialinfo.geospatialinfo_guid
-		inner join task on task_has_geospatialinfo.task_guid = task.guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by task.guid, task.localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	union
-	(select
-		'ORGANISATION' as object_type,
-		organisation.org_guid,
-		organisation.org_localid,
-		geospatialinfo.shape_id,
-		trim(geopoint.pointlocal_id),
-		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
-		count(*)
-	from geopoint
-		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
-		inner join organisation_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = organisation_has_geospatialinfo.geospatialinfo_guid
-		inner join organisation on organisation_has_geospatialinfo.org_guid = organisation.org_guid
-		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
-		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
-	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline') and geopoint.userinputformat = 'Bearing and Distance'
-	group by organisation.org_guid, organisation.org_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
-	having count(*) > 1
-	order by 3)
-	order by 1,3;
-	
-	
 -------------------------------
 -- Begin duplicate polygon section
 -------------------------------
@@ -3492,6 +3019,205 @@ create or replace view public.geocheck_duplicate_polygon_points as
 		count(*)
 	from geocheck_zint_organisation_polys
 	group by org_guid, org_localid, shape_id, shape
+	having count(*) > 1
+	order by 3)
+	order by 1, 3;
+	
+-------------------------------
+-- Begin duplicate points section
+-------------------------------
+
+drop view if exists public.geocheck_duplicate_points CASCADE; 
+create or replace view public.geocheck_duplicate_points as
+	(select
+		'HAZARD' as object_type,
+		hazard.hazard_guid,
+		hazard.hazard_localid,
+		geocheck_zint_hazard_pts.shape,
+		count(*)
+	from geocheck_zint_hazard_pts
+		inner join geospatialinfo on geocheck_zint_hazard_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join hazard_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = hazard_has_geospatialinfo.geospatialinfo_guid
+		inner join hazard on hazard_has_geospatialinfo.hazard_guid = hazard.hazard_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
+	group by hazard.hazard_guid, hazard.hazard_localid, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'HAZARD REDUCTION' as object_type,
+		hazreduc.hazreduc_guid,
+		hazreduc.hazreduc_localid,
+		geocheck_zint_hazreduc_pts.shape,
+		count(*)
+	from geocheck_zint_hazreduc_pts
+		inner join geospatialinfo on geocheck_zint_hazreduc_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join hazreduc_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = hazreduc_has_geospatialinfo.geospatialinfo_guid
+		inner join hazreduc on hazreduc_has_geospatialinfo.hazreduc_guid = hazreduc.hazreduc_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
+	group by hazreduc.hazreduc_guid, hazreduc.hazreduc_localid,  shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'ACCIDENT' as object_type,
+		accident.accident_guid,
+		accident.accident_localid,
+		geocheck_zint_accident_pts.shape,
+		count(*)
+	from geocheck_zint_accident_pts
+		inner join geospatialinfo on geocheck_zint_accident_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join accident_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = accident_has_geospatialinfo.geospatialinfo_guid
+		inner join accident on accident_has_geospatialinfo.accident_guid = accident.accident_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
+	group by accident.accident_guid, accident.accident_localid, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'MRE' as object_type,
+		mre.mre_guid,
+		mre.mre_localid,
+		geocheck_zint_mre_pts.shape,
+		count(*)
+	from geocheck_zint_mre_pts
+		inner join geospatialinfo on geocheck_zint_mre_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join mre_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = mre_has_geospatialinfo.geospatialinfo_guid
+		inner join mre on mre_has_geospatialinfo.mre_guid = mre.mre_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
+	group by mre.mre_guid, mre.mre_localid, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'QA' as object_type,
+		qa.qa_guid,
+		qa.qa_localid,
+		geocheck_zint_qa_pts.shape,
+		count(*)
+	from geocheck_zint_qa_pts
+		inner join geospatialinfo on geocheck_zint_qa_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join qa_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = qa_has_geospatialinfo.geospatialinfo_guid
+		inner join qa on qa_has_geospatialinfo.qa_guid = qa.qa_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
+	group by qa.qa_guid, qa.qa_localid, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'QA' as object_type,
+		victim.victim_guid,
+		victim.victim_localid,
+		geocheck_zint_victim_pts.shape,
+		count(*)
+	from geocheck_zint_victim_pts
+		inner join geospatialinfo on geocheck_zint_victim_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join victim_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = victim_has_geospatialinfo.geospatialinfo_guid
+		inner join victim on victim_has_geospatialinfo.victim_guid = victim.victim_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
+	group by victim.victim_guid, victim.victim_localid, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'GAZETTEER' as object_type,
+		gazetteer.gazetteer_guid,
+		gazetteer.gazetteer_localid,
+		geocheck_zint_gazetteer_pts.shape,
+		count(*)
+	from geocheck_zint_gazetteer_pts
+		inner join geospatialinfo on geocheck_zint_gazetteer_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join gazetteer_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = gazetteer_has_geospatialinfo.geospatialinfo_guid
+		inner join gazetteer on gazetteer_has_geospatialinfo.gazetteer_guid = gazetteer.gazetteer_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
+	group by gazetteer.gazetteer_guid, gazetteer.gazetteer_localid, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'LOCATION' as object_type,
+		location.location_guid,
+		location.location_localid,
+		geocheck_zint_location_pts.shape,
+		count(*)
+	from geocheck_zint_location_pts
+		inner join geospatialinfo on geocheck_zint_location_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join location_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = location_has_geospatialinfo.geospatialinfo_guid
+		inner join location on location_has_geospatialinfo.location_guid = location.location_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
+	group by location.location_guid, location.location_localid, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'PLACE' as object_type,
+		place.place_guid,
+		place.place_localid,
+		geocheck_zint_place_pts.shape,
+		count(*)
+	from geocheck_zint_place_pts
+		inner join geospatialinfo on geocheck_zint_place_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join place_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = place_has_geospatialinfo.geospatialinfo_guid
+		inner join place on place_has_geospatialinfo.place_guid = place.place_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
+	group by place.place_guid, place.place_localid, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'VICTIM ASSISTANCE' as object_type,
+		victim_assistance.guid,
+		victim_assistance.localid,
+		geocheck_zint_victim_assistance_pts.shape,
+		count(*)
+	from geocheck_zint_victim_assistance_pts
+		inner join geospatialinfo on geocheck_zint_victim_assistance_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join victim_assistance_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = victim_assistance_has_geospatialinfo.geospatialinfo_guid
+		inner join victim_assistance on victim_assistance_has_geospatialinfo.victim_assistance_guid = victim_assistance.guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
+	group by victim_assistance.guid, victim_assistance.localid, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'TASK' as object_type,
+		task.guid,
+		task.localid,
+		geocheck_zint_task_pts.shape,
+		count(*)
+	from geocheck_zint_task_pts
+		inner join geospatialinfo on geocheck_zint_task_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join task_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = task_has_geospatialinfo.geospatialinfo_guid
+		inner join task on task_has_geospatialinfo.task_guid = task.guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
+	group by task.guid, task.localid, shape
+	having count(*) > 1
+	order by 3)
+	union
+	(select
+		'ORGANISATION' as object_type,
+		organisation.org_guid,
+		organisation.org_localid,
+		geocheck_zint_organisation_pts.shape,
+		count(*)
+	from geocheck_zint_organisation_pts
+		inner join geospatialinfo on geocheck_zint_organisation_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join organisation_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = organisation_has_geospatialinfo.geospatialinfo_guid
+		inner join organisation on organisation_has_geospatialinfo.org_guid = organisation.org_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
+	group by organisation.org_guid, organisation.org_localid, shape
 	having count(*) > 1
 	order by 3)
 	order by 1, 3;

@@ -27,7 +27,7 @@ There are 2 types of views:
 | [geocheck_duplicate_polygon_points](#geocheck_duplicate_polygon_points) | Geo Check | List of of duplicate points based on coordinates in a polygon|
 | [geocheck_duplicate_polygon_point_localid](#geocheck_duplicate_polygon_point_localid) | Geo Check | List of duplicate points based on localid in a polygon
 | [geocheck_duplicate_polygon_point_localid_trimmed](#geocheck_duplicate_polygon_point_localid_trimmed) | Geo Check | List of duplicate points based on trimmed localid in a polygon|
-| [geocheck_duplicate_points TODO](#geocheck_duplicate_points) | Geo Check | List of duplicate points based on coordinates NOT in a polygon|
+| [geocheck_duplicate_points](#geocheck_duplicate_points) | Geo Check | List of duplicate points based on coordinates NOT in a polygon|
 | [geocheck_duplicate_point_point_localid](#geocheck_duplicate_point_point_localid) | Geo Check | List of duplicate points based on localid NOT in a polygon |
 | [geocheck_duplicate_point_point_localid_trimmed](#geocheck_duplicate_point_point_localid_trimmed) | Geo Check | List of duplicate points based on trimmed localid NOT in a polygon |
 | [geocheck_distance_polygon_points](#geocheck_distance_polygon_points) | Geo Check | List of polygons defined with a distance between 2 consecutive points higher than the value defined in the query (default is 5000 m) | 
@@ -38,7 +38,7 @@ There are 2 types of views:
 
 **!TYPE!** can be accident, gazetteer, hazard, hazreduc, location, mre, organisation, place, qa, task, victim_assistance, victim.
 
-## Detailed description
+## Detailed descriptions
 
 ### geocheck_obj_**!TYPE!**_invalid_polys
 List of invalid polygons for each IMSMAng object type.  
@@ -93,6 +93,7 @@ List of duplicate polygons based on shape id in a record for each IMSMAng object
 | **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | shapeenum | IMSMAng shape type |
+| shape_id | IMSMAng polygon shapeid |
 | count | Number of duplicate polygons based on shapeid for each record|
 
 [View list](#views-available)
@@ -107,6 +108,7 @@ List of duplicate polygons based on trimmed shape id in a record for each IMSMAn
 | **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | shapeenum | IMSMAng shape type |
+| shape_id | IMSMAng polygon shapeid |
 | count | Number of duplicate polygons based on shapeid for each record|
 
 [View list](#views-available)
@@ -137,7 +139,7 @@ The issues in the geocheck_duplicate_polygons and geocheck_duplicate_polygon_poi
 | object_type | IMSMAng object type |
 | **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
-| shapeid | IMSMAng polygon shapeid |
+| shape_id | IMSMAng polygon shapeid |
 | pointlocal_id | IMSMAng point localid |
 | pointtypeenum | IMSMAng point type |
 | count | Number of duplicate points based on localid for each polygon in each record|
@@ -154,7 +156,7 @@ The issues in the geocheck_duplicate_polygons and geocheck_duplicate_polygon_poi
 | object_type | IMSMAng object type |
 | **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
-| shapeid | IMSMAng polygon shapeid |
+| shape_id | IMSMAng polygon shapeid |
 | pointlocal_id | IMSMAng point localid |
 | pointtypeenum | IMSMAng point type |
 | count | Number of duplicate points based on localid for each polygon in each record|
@@ -170,7 +172,7 @@ List of duplicate points based on coordinates NOT in a polygon for each IMSMAng 
 | object_type | IMSMAng object type |
 | **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
-| shapeid | IMSMAng polygon shapeid |
+| shape_id | IMSMAng polygon shapeid |
 | shape | Postgis geometry |
 | count | Number of duplicate points based on coordinates for each polygon in each record|
 

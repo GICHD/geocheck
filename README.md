@@ -1,8 +1,7 @@
 # geocheck views
 
-The SQL script geocheck.sql create views in the public schema of IMSMAng that help check the quality of geographical information for your IMSMAng database. The script is meant to be run on a IMSMAng V6 installation.
-
-To create the views just copy the script in a query window in pgAdmin III or Navicat and run it.
+## Features
+The SQL script geocheck.sql create views in the public schema of IMSMAng that help check the quality of geographical information for your IMSMAng database. The script is meant to be run on a IMSMAng V6 installation.  The Geocheck is **read-only** and does not edit your data.
 
 The checks look at a variety of possible issues:
   - invalid polygons (IMSMAng does not check if a polygon created by a set of points is valid)
@@ -12,31 +11,59 @@ The checks look at a variety of possible issues:
 
 The SQL script drop_views.sql can be used to remove all views from IMSMAng.
 
+## Who is this for?
+
+* IMSMA NG Administrators
+* IM Advisors supporting IMSMA NG
+
+## Requirements
+
+* IMSMA NG Version 6
+* A SQL Editor, for example pgAdmin III or Navicat.
+
+## Installation Instructions
+
+1. Create the database views
+
+   Copy and run the geocheck.sql script in a query window in pgAdmin III or Navicat.
+
+ 2. Review the Geocheck Results
+
+    In your database SQL editor, check the views below in turn for any issues.  As the issues are resolved the views will update automatically.
+
+3. Drop the Views _(optional)_
+
+   Run the drop_views.sql script to delete the views.
+
 ## Views available
 There are 2 types of views:
   - Geo Check: they provides identified issues that need to be looked at.
   - Information: they are used as intermediary views to generate the Geo Check views but can provide useful information
 
-|View Name| Type | Description|
-| --- | --- | --- |
-| [geocheck_obj_**!TYPE!**_invalid_polys](#geocheck_obj_type_invalid_polys) | Geo Check | List of invalid polygons |
-| [geocheck_obj_**!TYPE!**_few_vertices_polys](#geocheck_obj_type_few_vertices_polys) | Geo Check | List of polygons defined with less than 3 vertices|
-| [geocheck_duplicate_polygons](#geocheck_duplicate_polygons) | Geo Check | List of duplicate polygons based on coordinates in a record |
-| [geocheck_duplicate_polygon_polyid](#geocheck_duplicate_polygon_polyid) | Geo Check | List of duplicate polygons based on shape id in a record |
-| [geocheck_duplicate_polygon_polyid_trimmed](#geocheck_duplicate_polygon_polyid_trimmed) | Geo Check | List of duplicate polygons based on trimmed shapeid in a record |
-| [geocheck_duplicate_polygon_points](#geocheck_duplicate_polygon_points) | Geo Check | List of of duplicate points based on coordinates in a polygon|
-| [geocheck_duplicate_polygon_point_localid](#geocheck_duplicate_polygon_point_localid) | Geo Check | List of duplicate points based on localid in a polygon
-| [geocheck_duplicate_polygon_point_localid_trimmed](#geocheck_duplicate_polygon_point_localid_trimmed) | Geo Check | List of duplicate points based on trimmed localid in a polygon|
-| [geocheck_duplicate_points](#geocheck_duplicate_points) | Geo Check | List of duplicate points based on coordinates NOT in a polygon|
-| [geocheck_duplicate_point_point_localid](#geocheck_duplicate_point_point_localid) | Geo Check | List of duplicate points based on localid NOT in a polygon |
-| [geocheck_duplicate_point_point_localid_trimmed](#geocheck_duplicate_point_point_localid_trimmed) | Geo Check | List of duplicate points based on trimmed localid NOT in a polygon |
-| [geocheck_distance_polygon_points](#geocheck_distance_polygon_points) | Geo Check | List of polygons defined with a distance between 2 consecutive points higher than the value defined in the query (default is 5000 m) | 
-| [geocheck_zint_**!TYPE!**_valid_polys](#geocheck_zint_type_valid_polys) | Information | List of valid polygons |
-| [geocheck_zint_**!TYPE!**_valid_multipart_polys](#geocheck_zint_type_valid_multipart_polys) | Information| List of multi polygon records|
-| [geocheck_zint_**!TYPE!**_polys](#geocheck_zint_type_polys) | Information | List of polygons created from IMSMAng points |
-| [geocheck_zint_**!TYPE!**_pts](#geocheck_zint_type_pts) | Information | List of points from IMSMAng |
+|View Name| Type |  | Description|
+| --- | --- | --- | --- |
+| [geocheck_obj_**!TYPE!**_invalid_polys](#geocheck_obj_type_invalid_polys) | Geo Check | :heavy_exclamation_mark: | List of invalid polygons |
+| [geocheck_obj_**!TYPE!**_few_vertices_polys](#geocheck_obj_type_few_vertices_polys) | Geo Check |:heavy_exclamation_mark: | List of polygons defined with less than 3 vertices|
+| [geocheck_duplicate_polygons](#geocheck_duplicate_polygons) | Geo Check | :heavy_exclamation_mark: | List of duplicate polygons based on coordinates in a record |
+| [geocheck_duplicate_polygon_polyid](#geocheck_duplicate_polygon_polyid) | Geo Check |:heavy_exclamation_mark: | List of duplicate polygons based on shape id in a record |
+| [geocheck_duplicate_polygon_polyid_trimmed](#geocheck_duplicate_polygon_polyid_trimmed) | Geo Check | :heavy_exclamation_mark: | List of duplicate polygons based on trimmed shapeid in a record |
+| [geocheck_duplicate_polygon_points](#geocheck_duplicate_polygon_points) | Geo Check | :heavy_exclamation_mark: | List of of duplicate points based on coordinates in a polygon|
+| [geocheck_duplicate_polygon_point_localid](#geocheck_duplicate_polygon_point_localid) | Geo Check | :heavy_exclamation_mark: |List of duplicate points based on localid in a polygon
+| [geocheck_duplicate_polygon_point_localid_trimmed](#geocheck_duplicate_polygon_point_localid_trimmed) | Geo Check | :heavy_exclamation_mark: | List of duplicate points based on trimmed localid in a polygon|
+| [geocheck_duplicate_points](#geocheck_duplicate_points) | Geo Check | :heavy_exclamation_mark:| List of duplicate points based on coordinates NOT in a polygon|
+| [geocheck_duplicate_point_point_localid](#geocheck_duplicate_point_point_localid) | Geo Check | :heavy_exclamation_mark: | List of duplicate points based on localid NOT in a polygon |
+| [geocheck_duplicate_point_point_localid_trimmed](#geocheck_duplicate_point_point_localid_trimmed) | Geo Check | :heavy_exclamation_mark:| List of duplicate points based on trimmed localid NOT in a polygon |
+| [geocheck_distance_polygon_points](#geocheck_distance_polygon_points) | Geo Check | :warning:| List of polygons defined with a distance between 2 consecutive points higher than the value defined in the query (default is 5000 m) | 
+| [geocheck_zint_**!TYPE!**_valid_polys](#geocheck_zint_type_valid_polys) | Information |:information_source: | List of valid polygons |
+| [geocheck_zint_**!TYPE!**_valid_multipart_polys](#geocheck_zint_type_valid_multipart_polys) | Information|:information_source: | List of multi polygon records|
+| [geocheck_zint_**!TYPE!**_polys](#geocheck_zint_type_polys) | Information | :information_source:|  List of polygons created from IMSMAng points |
+| [geocheck_zint_**!TYPE!**_pts](#geocheck_zint_type_pts) | Information |:information_source: | List of points from IMSMAng |
 
 **!TYPE!** can be accident, gazetteer, hazard, hazreduc, location, mre, organisation, place, qa, task, victim_assistance, victim.
+
+:heavy_exclamation_mark: - Mandatory Fix
+:warning: - Advisory
+:information_source: - Information only
 
 ## Detailed descriptions
 

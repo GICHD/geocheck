@@ -25,7 +25,7 @@
 -- V2.3
 --	Add geocheck_**_geo_valid_multipart_polys to identify features with multiple polygons defined for one object.
 --	Remove SRID information in wkt string to simplify copy/paste
---	Rename intermediary tables with _
+--	Rename intermediary tables with _zint_
 
 -------------------------------
 -- Begin hazard section

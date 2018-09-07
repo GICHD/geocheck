@@ -53,7 +53,8 @@ There are 2 types of views:
 | [geocheck_duplicate_points](#geocheck_duplicate_points) | Geo Check | :heavy_exclamation_mark:| List of duplicate points based on coordinates NOT in a polygon|
 | [geocheck_duplicate_point_point_localid](#geocheck_duplicate_point_point_localid) | Geo Check | :heavy_exclamation_mark: | List of duplicate points based on localid NOT in a polygon |
 | [geocheck_duplicate_point_point_localid_trimmed](#geocheck_duplicate_point_point_localid_trimmed) | Geo Check | :heavy_exclamation_mark:| List of duplicate points based on trimmed localid NOT in a polygon |
-| [geocheck_distance_polygon_points](#geocheck_distance_polygon_points) | Geo Check | :warning:| List of polygons defined with a distance between 2 consecutive points higher than the value defined in the query (default is 5000 m) | 
+| [geocheck_adv_distance_polygon_points](#geocheck_adv_distance_polygon_points) | Geo Check | :warning:| List of polygons defined with a distance between 2 consecutive points higher than the value defined in the query (default is 5000 m) | 
+| [geocheck_adv_overlapping_polygons](#geocheck_adv_overlapping_polygons) | Geo Check | :warning:| List of multipart polygons whose polygons overlap more than a percentage defined in the query (default is 0.9%) | 
 | [geocheck_zint_**!TYPE!**_valid_polys](#geocheck_zint_type_valid_polys) | Information |:information_source: | List of valid polygons |
 | [geocheck_zint_**!TYPE!**_valid_multipart_polys](#geocheck_zint_type_valid_multipart_polys) | Information|:information_source: | List of multi polygon records|
 | [geocheck_zint_**!TYPE!**_polys](#geocheck_zint_type_polys) | Information | :information_source:|  List of polygons created from IMSMAng points |
@@ -237,7 +238,7 @@ The issues in the geocheck_duplicate_points view must be fixed first before look
 
 [View list](#views-available)
 
-### geocheck_distance_polygon_points
+### geocheck_adv_distance_polygon_points
 List of polygons defined with a distance between 2 consecutive points higher than the value defined in the query (default is 5000 m). The value can be change by doing a replace all as explained at the top of the file.  
 **This view must be MOSTLY empty as there may be relevant use cases for long distance between vertices.**
 
@@ -247,6 +248,19 @@ List of polygons defined with a distance between 2 consecutive points higher tha
 | localid | IMSMAng localid |
 | shapeid | IMSMAng polygon shapeid |
 | distance | Distance in meters higher than the default distance used in the query |
+
+[View list](#views-available)
+
+### geocheck_adv_overlapping_polygons
+List of multipart polygons whose polygons overlap more than a defined percentage (default is 0.9%). The percentage can be change by doing a replace all as explained at the top of the file.  
+**This view must be MOSTLY empty as there may be relevant use cases for polygon overlapping.**
+
+| Field | Description|
+| --- | --- |
+| object_type | IMSMAng object type |
+| localid | IMSMAng localid |
+| wkt | WKT MULTILINESTRING - can be visualize with [this webpage](https://arthur-e.github.io/Wicket/sandbox-gmaps3.html) |
+| overlap | Percentage by which the polygons are overlapping |
 
 [View list](#views-available)
 

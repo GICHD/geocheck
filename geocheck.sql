@@ -1,6 +1,9 @@
 ﻿-- To change the distance between points for the distance check query:
 --  do a replace all on "5000 -- CHANGE MIN"
 
+-- To change the percentage of overlapping for the overlapping polygons query:
+--  do a replace all on "overlap_perc > 0.9"
+
 -- V2
 --	Change name to geocheck
 --	The views are now created in the public schema
@@ -26,6 +29,11 @@
 --	Add geocheck_**_geo_valid_multipart_polys to identify features with multiple polygons defined for one object.
 --	Remove SRID information in wkt string to simplify copy/paste
 --	Rename intermediary tables with _zint_
+
+-- V2.4
+-- Overlapping polygons can be found in geocheck_adv_overlapping_polygons
+-- Rename geocheck_distance_polygon_points as geocheck_adv_distance_polygon_points
+
 
 -------------------------------
 -- Begin hazard section
@@ -1216,8 +1224,8 @@ create view public.geocheck_obj_organisation_invalid_polys as
 -- It is set to returns distances above 2000m (This value can be changed for each object type in the query).
 
 
-drop view if exists public.geocheck_distance_polygon_points CASCADE; 
-create or replace view public.geocheck_distance_polygon_points as
+drop view if exists public.geocheck_adv_distance_polygon_points CASCADE; 
+create or replace view public.geocheck_adv_distance_polygon_points as
 
 	(select 'HAZARD' as object_type, name1 as localid, shape1 as shapeid, distance from
 	(select name as name1, shape_id as shape1, lead(name) over (order by name, shape_id, pointno) as name2,
@@ -3110,7 +3118,7 @@ create or replace view public.geocheck_duplicate_points as
 	order by 3)
 	union
 	(select
-		'QA' as object_type,
+		'VICTIM' as object_type,
 		victim.victim_guid,
 		victim.victim_localid,
 		geocheck_zint_victim_pts.shape,
@@ -3221,3 +3229,177 @@ create or replace view public.geocheck_duplicate_points as
 	having count(*) > 1
 	order by 3)
 	order by 1, 3;
+
+-------------------------------
+-- Begin overlapping polygon section
+-------------------------------
+
+drop view if exists public.geocheck_adv_overlapping_polygons CASCADE; 
+create or replace view public.geocheck_adv_overlapping_polygons as
+	(select 'HAZARD' as object_type, hazard_localid as localid, wkt, overlap from 
+		(SELECT geocheck_zint_hazard_valid_polys.hazard_localid,
+		st_collect(geocheck_zint_hazard_valid_polys.shape) AS st_collect,
+		st_union(geocheck_zint_hazard_valid_polys.shape) AS st_union,
+		substr(st_asewkt(st_collect(st_exteriorring(geocheck_zint_hazard_valid_polys.shape))), 11) AS wkt,
+		to_number(to_char((st_area(st_transform(st_collect(geocheck_zint_hazard_valid_polys.shape),3395)) - st_area(st_transform(st_union(geocheck_zint_hazard_valid_polys.shape),3395)))/st_area(st_transform(st_union(geocheck_zint_hazard_valid_polys.shape),3395))*100,'999D99'),'999D99')  as overlap
+		FROM geocheck_zint_hazard_valid_polys
+		GROUP BY geocheck_zint_hazard_valid_polys.hazard_localid
+		HAVING ((geocheck_zint_hazard_valid_polys.hazard_localid)::text IN
+			(SELECT geocheck_zint_hazard_pts.hazard_localid FROM geocheck_zint_hazard_pts WHERE ((geocheck_zint_hazard_pts.shapeenum)::text = 'Polygon'::text)
+			GROUP BY geocheck_zint_hazard_pts.hazard_localid HAVING (count(DISTINCT geocheck_zint_hazard_pts.geospatialinfo_guid) > 1) ORDER BY geocheck_zint_hazard_pts.	hazard_localid))) as tmp
+	where (st_collect::TEXT != st_union::TEXT) and overlap > 0.9
+	order by overlap  desc)
+	union all
+	(select 'HAZARD REDUCTION' as object_type, hazreduc_localid as localid, wkt, overlap from 
+		(SELECT geocheck_zint_hazreduc_valid_polys.hazreduc_localid,
+		st_collect(geocheck_zint_hazreduc_valid_polys.shape) AS st_collect,
+		st_union(geocheck_zint_hazreduc_valid_polys.shape) AS st_union,
+		substr(st_asewkt(st_collect(st_exteriorring(geocheck_zint_hazreduc_valid_polys.shape))), 11) AS wkt,
+		to_number(to_char((st_area(st_transform(st_collect(geocheck_zint_hazreduc_valid_polys.shape),3395)) - st_area(st_transform(st_union(geocheck_zint_hazreduc_valid_polys.shape),3395)))/st_area(st_transform(st_union(geocheck_zint_hazreduc_valid_polys.shape),3395))*100,'999D99'),'999D99')  as overlap
+		FROM geocheck_zint_hazreduc_valid_polys
+		GROUP BY geocheck_zint_hazreduc_valid_polys.hazreduc_localid
+		HAVING ((geocheck_zint_hazreduc_valid_polys.hazreduc_localid)::text IN
+			(SELECT geocheck_zint_hazreduc_pts.hazreduc_localid FROM geocheck_zint_hazreduc_pts WHERE ((geocheck_zint_hazreduc_pts.shapeenum)::text = 'Polygon'::text)
+			GROUP BY geocheck_zint_hazreduc_pts.hazreduc_localid HAVING (count(DISTINCT geocheck_zint_hazreduc_pts.geospatialinfo_guid) > 1) ORDER BY geocheck_zint_hazreduc_pts.	hazreduc_localid))) as tmp
+	where (st_collect::TEXT != st_union::TEXT) and overlap > 0.9
+	order by overlap  desc)
+	union all
+	(select 'ACCIDENT' as object_type, accident_localid as localid, wkt, overlap from 
+		(SELECT geocheck_zint_accident_valid_polys.accident_localid,
+		st_collect(geocheck_zint_accident_valid_polys.shape) AS st_collect,
+		st_union(geocheck_zint_accident_valid_polys.shape) AS st_union,
+		substr(st_asewkt(st_collect(st_exteriorring(geocheck_zint_accident_valid_polys.shape))), 11) AS wkt,
+		to_number(to_char((st_area(st_transform(st_collect(geocheck_zint_accident_valid_polys.shape),3395)) - st_area(st_transform(st_union(geocheck_zint_accident_valid_polys.shape),3395)))/st_area(st_transform(st_union(geocheck_zint_accident_valid_polys.shape),3395))*100,'999D99'),'999D99')  as overlap
+		FROM geocheck_zint_accident_valid_polys
+		GROUP BY geocheck_zint_accident_valid_polys.accident_localid
+		HAVING ((geocheck_zint_accident_valid_polys.accident_localid)::text IN
+			(SELECT geocheck_zint_accident_pts.accident_localid FROM geocheck_zint_accident_pts WHERE ((geocheck_zint_accident_pts.shapeenum)::text = 'Polygon'::text)
+			GROUP BY geocheck_zint_accident_pts.accident_localid HAVING (count(DISTINCT geocheck_zint_accident_pts.geospatialinfo_guid) > 1) ORDER BY geocheck_zint_accident_pts.	accident_localid))) as tmp
+	where (st_collect::TEXT != st_union::TEXT) and overlap > 0.9
+	order by overlap  desc)
+	union all
+	(select 'MRE' as object_type, mre_localid as localid, wkt, overlap from 
+		(SELECT geocheck_zint_mre_valid_polys.mre_localid,
+		st_collect(geocheck_zint_mre_valid_polys.shape) AS st_collect,
+		st_union(geocheck_zint_mre_valid_polys.shape) AS st_union,
+		substr(st_asewkt(st_collect(st_exteriorring(geocheck_zint_mre_valid_polys.shape))), 11) AS wkt,
+		to_number(to_char((st_area(st_transform(st_collect(geocheck_zint_mre_valid_polys.shape),3395)) - st_area(st_transform(st_union(geocheck_zint_mre_valid_polys.shape),3395)))/st_area(st_transform(st_union(geocheck_zint_mre_valid_polys.shape),3395))*100,'999D99'),'999D99')  as overlap
+		FROM geocheck_zint_mre_valid_polys
+		GROUP BY geocheck_zint_mre_valid_polys.mre_localid
+		HAVING ((geocheck_zint_mre_valid_polys.mre_localid)::text IN
+			(SELECT geocheck_zint_mre_pts.mre_localid FROM geocheck_zint_mre_pts WHERE ((geocheck_zint_mre_pts.shapeenum)::text = 'Polygon'::text)
+			GROUP BY geocheck_zint_mre_pts.mre_localid HAVING (count(DISTINCT geocheck_zint_mre_pts.geospatialinfo_guid) > 1) ORDER BY geocheck_zint_mre_pts.	mre_localid))) as tmp
+	where (st_collect::TEXT != st_union::TEXT) and overlap > 0.9
+	order by overlap  desc)
+	union all
+	(select 'QA' as object_type, qa_localid as localid, wkt, overlap from 
+		(SELECT geocheck_zint_qa_valid_polys.qa_localid,
+		st_collect(geocheck_zint_qa_valid_polys.shape) AS st_collect,
+		st_union(geocheck_zint_qa_valid_polys.shape) AS st_union,
+		substr(st_asewkt(st_collect(st_exteriorring(geocheck_zint_qa_valid_polys.shape))), 11) AS wkt,
+		to_number(to_char((st_area(st_transform(st_collect(geocheck_zint_qa_valid_polys.shape),3395)) - st_area(st_transform(st_union(geocheck_zint_qa_valid_polys.shape),3395)))/st_area(st_transform(st_union(geocheck_zint_qa_valid_polys.shape),3395))*100,'999D99'),'999D99')  as overlap
+		FROM geocheck_zint_qa_valid_polys
+		GROUP BY geocheck_zint_qa_valid_polys.qa_localid
+		HAVING ((geocheck_zint_qa_valid_polys.qa_localid)::text IN
+			(SELECT geocheck_zint_qa_pts.qa_localid FROM geocheck_zint_qa_pts WHERE ((geocheck_zint_qa_pts.shapeenum)::text = 'Polygon'::text)
+			GROUP BY geocheck_zint_qa_pts.qa_localid HAVING (count(DISTINCT geocheck_zint_qa_pts.geospatialinfo_guid) > 1) ORDER BY geocheck_zint_qa_pts.	qa_localid))) as tmp
+	where (st_collect::TEXT != st_union::TEXT) and overlap > 0.9
+	order by overlap  desc)
+	union all
+	(select 'VICTIM' as object_type, victim_localid as localid, wkt, overlap from 
+		(SELECT geocheck_zint_victim_valid_polys.victim_localid,
+		st_collect(geocheck_zint_victim_valid_polys.shape) AS st_collect,
+		st_union(geocheck_zint_victim_valid_polys.shape) AS st_union,
+		substr(st_asewkt(st_collect(st_exteriorring(geocheck_zint_victim_valid_polys.shape))), 11) AS wkt,
+		to_number(to_char((st_area(st_transform(st_collect(geocheck_zint_victim_valid_polys.shape),3395)) - st_area(st_transform(st_union(geocheck_zint_victim_valid_polys.shape),3395)))/st_area(st_transform(st_union(geocheck_zint_victim_valid_polys.shape),3395))*100,'999D99'),'999D99')  as overlap
+		FROM geocheck_zint_victim_valid_polys
+		GROUP BY geocheck_zint_victim_valid_polys.victim_localid
+		HAVING ((geocheck_zint_victim_valid_polys.victim_localid)::text IN
+			(SELECT geocheck_zint_victim_pts.victim_localid FROM geocheck_zint_victim_pts WHERE ((geocheck_zint_victim_pts.shapeenum)::text = 'Polygon'::text)
+			GROUP BY geocheck_zint_victim_pts.victim_localid HAVING (count(DISTINCT geocheck_zint_victim_pts.geospatialinfo_guid) > 1) ORDER BY geocheck_zint_victim_pts.	victim_localid))) as tmp
+	where (st_collect::TEXT != st_union::TEXT) and overlap > 0.9
+	order by overlap  desc)
+	union all
+	(select 'GAZETTEER' as object_type, gazetteer_localid as localid, wkt, overlap from 
+		(SELECT geocheck_zint_gazetteer_valid_polys.gazetteer_localid,
+		st_collect(geocheck_zint_gazetteer_valid_polys.shape) AS st_collect,
+		st_union(geocheck_zint_gazetteer_valid_polys.shape) AS st_union,
+		substr(st_asewkt(st_collect(st_exteriorring(geocheck_zint_gazetteer_valid_polys.shape))), 11) AS wkt,
+		to_number(to_char((st_area(st_transform(st_collect(geocheck_zint_gazetteer_valid_polys.shape),3395)) - st_area(st_transform(st_union(geocheck_zint_gazetteer_valid_polys.shape),3395)))/st_area(st_transform(st_union(geocheck_zint_gazetteer_valid_polys.shape),3395))*100,'999D99'),'999D99')  as overlap
+		FROM geocheck_zint_gazetteer_valid_polys
+		GROUP BY geocheck_zint_gazetteer_valid_polys.gazetteer_localid
+		HAVING ((geocheck_zint_gazetteer_valid_polys.gazetteer_localid)::text IN
+			(SELECT geocheck_zint_gazetteer_pts.gazetteer_localid FROM geocheck_zint_gazetteer_pts WHERE ((geocheck_zint_gazetteer_pts.shapeenum)::text = 'Polygon'::text)
+			GROUP BY geocheck_zint_gazetteer_pts.gazetteer_localid HAVING (count(DISTINCT geocheck_zint_gazetteer_pts.geospatialinfo_guid) > 1) ORDER BY geocheck_zint_gazetteer_pts.	gazetteer_localid))) as tmp
+	where (st_collect::TEXT != st_union::TEXT) and overlap > 0.9
+	order by overlap  desc)
+	union all
+	(select 'LOCATION' as object_type, location_localid as localid, wkt, overlap from 
+		(SELECT geocheck_zint_location_valid_polys.location_localid,
+		st_collect(geocheck_zint_location_valid_polys.shape) AS st_collect,
+		st_union(geocheck_zint_location_valid_polys.shape) AS st_union,
+		substr(st_asewkt(st_collect(st_exteriorring(geocheck_zint_location_valid_polys.shape))), 11) AS wkt,
+		to_number(to_char((st_area(st_transform(st_collect(geocheck_zint_location_valid_polys.shape),3395)) - st_area(st_transform(st_union(geocheck_zint_location_valid_polys.shape),3395)))/st_area(st_transform(st_union(geocheck_zint_location_valid_polys.shape),3395))*100,'999D99'),'999D99')  as overlap
+		FROM geocheck_zint_location_valid_polys
+		GROUP BY geocheck_zint_location_valid_polys.location_localid
+		HAVING ((geocheck_zint_location_valid_polys.location_localid)::text IN
+			(SELECT geocheck_zint_location_pts.location_localid FROM geocheck_zint_location_pts WHERE ((geocheck_zint_location_pts.shapeenum)::text = 'Polygon'::text)
+			GROUP BY geocheck_zint_location_pts.location_localid HAVING (count(DISTINCT geocheck_zint_location_pts.geospatialinfo_guid) > 1) ORDER BY geocheck_zint_location_pts.	location_localid))) as tmp
+	where (st_collect::TEXT != st_union::TEXT) and overlap > 0.9
+	order by overlap  desc)
+	union all
+	(select 'PLACE' as object_type, place_localid as localid, wkt, overlap from 
+		(SELECT geocheck_zint_place_valid_polys.place_localid,
+		st_collect(geocheck_zint_place_valid_polys.shape) AS st_collect,
+		st_union(geocheck_zint_place_valid_polys.shape) AS st_union,
+		substr(st_asewkt(st_collect(st_exteriorring(geocheck_zint_place_valid_polys.shape))), 11) AS wkt,
+		to_number(to_char((st_area(st_transform(st_collect(geocheck_zint_place_valid_polys.shape),3395)) - st_area(st_transform(st_union(geocheck_zint_place_valid_polys.shape),3395)))/st_area(st_transform(st_union(geocheck_zint_place_valid_polys.shape),3395))*100,'999D99'),'999D99')  as overlap
+		FROM geocheck_zint_place_valid_polys
+		GROUP BY geocheck_zint_place_valid_polys.place_localid
+		HAVING ((geocheck_zint_place_valid_polys.place_localid)::text IN
+			(SELECT geocheck_zint_place_pts.place_localid FROM geocheck_zint_place_pts WHERE ((geocheck_zint_place_pts.shapeenum)::text = 'Polygon'::text)
+			GROUP BY geocheck_zint_place_pts.place_localid HAVING (count(DISTINCT geocheck_zint_place_pts.geospatialinfo_guid) > 1) ORDER BY geocheck_zint_place_pts.	place_localid))) as tmp
+	where (st_collect::TEXT != st_union::TEXT) and overlap > 0.9
+	order by overlap  desc)
+	union all
+	(select 'VICTIM ASSISTANCE' as object_type, localid as localid, wkt, overlap from 
+		(SELECT geocheck_zint_victim_assistance_valid_polys.localid,
+		st_collect(geocheck_zint_victim_assistance_valid_polys.shape) AS st_collect,
+		st_union(geocheck_zint_victim_assistance_valid_polys.shape) AS st_union,
+		substr(st_asewkt(st_collect(st_exteriorring(geocheck_zint_victim_assistance_valid_polys.shape))), 11) AS wkt,
+		to_number(to_char((st_area(st_transform(st_collect(geocheck_zint_victim_assistance_valid_polys.shape),3395)) - st_area(st_transform(st_union(geocheck_zint_victim_assistance_valid_polys.shape),3395)))/st_area(st_transform(st_union(geocheck_zint_victim_assistance_valid_polys.shape),3395))*100,'999D99'),'999D99')  as overlap
+		FROM geocheck_zint_victim_assistance_valid_polys
+		GROUP BY geocheck_zint_victim_assistance_valid_polys.localid
+		HAVING ((geocheck_zint_victim_assistance_valid_polys.localid)::text IN
+			(SELECT geocheck_zint_victim_assistance_pts.localid FROM geocheck_zint_victim_assistance_pts WHERE ((geocheck_zint_victim_assistance_pts.shapeenum)::text = 'Polygon'::text)
+			GROUP BY geocheck_zint_victim_assistance_pts.localid HAVING (count(DISTINCT geocheck_zint_victim_assistance_pts.geospatialinfo_guid) > 1) ORDER BY geocheck_zint_victim_assistance_pts.	localid))) as tmp
+	where (st_collect::TEXT != st_union::TEXT) and overlap > 0.9
+	order by overlap  desc)
+	union all
+	(select 'TASK' as object_type, localid as localid, wkt, overlap from 
+		(SELECT geocheck_zint_task_valid_polys.localid,
+		st_collect(geocheck_zint_task_valid_polys.shape) AS st_collect,
+		st_union(geocheck_zint_task_valid_polys.shape) AS st_union,
+		substr(st_asewkt(st_collect(st_exteriorring(geocheck_zint_task_valid_polys.shape))), 11) AS wkt,
+		to_number(to_char((st_area(st_transform(st_collect(geocheck_zint_task_valid_polys.shape),3395)) - st_area(st_transform(st_union(geocheck_zint_task_valid_polys.shape),3395)))/st_area(st_transform(st_union(geocheck_zint_task_valid_polys.shape),3395))*100,'999D99'),'999D99')  as overlap
+		FROM geocheck_zint_task_valid_polys
+		GROUP BY geocheck_zint_task_valid_polys.localid
+		HAVING ((geocheck_zint_task_valid_polys.localid)::text IN
+			(SELECT geocheck_zint_task_pts.localid FROM geocheck_zint_task_pts WHERE ((geocheck_zint_task_pts.shapeenum)::text = 'Polygon'::text)
+			GROUP BY geocheck_zint_task_pts.localid HAVING (count(DISTINCT geocheck_zint_task_pts.geospatialinfo_guid) > 1) ORDER BY geocheck_zint_task_pts.	localid))) as tmp
+	where (st_collect::TEXT != st_union::TEXT) and overlap > 0.9
+	order by overlap  desc)
+	union all
+	(select 'ORGANISATION' as object_type, org_localid as localid, wkt, overlap from 
+		(SELECT geocheck_zint_organisation_valid_polys.org_localid,
+		st_collect(geocheck_zint_organisation_valid_polys.shape) AS st_collect,
+		st_union(geocheck_zint_organisation_valid_polys.shape) AS st_union,
+		substr(st_asewkt(st_collect(st_exteriorring(geocheck_zint_organisation_valid_polys.shape))), 11) AS wkt,
+		to_number(to_char((st_area(st_transform(st_collect(geocheck_zint_organisation_valid_polys.shape),3395)) - st_area(st_transform(st_union(geocheck_zint_organisation_valid_polys.shape),3395)))/st_area(st_transform(st_union(geocheck_zint_organisation_valid_polys.shape),3395))*100,'999D99'),'999D99')  as overlap
+		FROM geocheck_zint_organisation_valid_polys
+		GROUP BY geocheck_zint_organisation_valid_polys.org_localid
+		HAVING ((geocheck_zint_organisation_valid_polys.org_localid)::text IN
+			(SELECT geocheck_zint_organisation_pts.org_localid FROM geocheck_zint_organisation_pts WHERE ((geocheck_zint_organisation_pts.shapeenum)::text = 'Polygon'::text)
+			GROUP BY geocheck_zint_organisation_pts.org_localid HAVING (count(DISTINCT geocheck_zint_organisation_pts.geospatialinfo_guid) > 1) ORDER BY geocheck_zint_organisation_pts.	org_localid))) as tmp
+	where (st_collect::TEXT != st_union::TEXT) and overlap > 0.9
+	order by overlap  desc);

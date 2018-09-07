@@ -8,6 +8,7 @@ The checks look at a variety of possible issues:
   - polygons with too many vertices (less than 3)
   - duplicate information (polygon, point, point or polygon id)
   - distance between points in a polygon
+  - overlapping polygons
 
 The SQL script drop_views.sql can be used to remove all views from IMSMAng.
 

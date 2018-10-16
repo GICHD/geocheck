@@ -284,6 +284,7 @@ List of multi polygon records.
 
 | Field | Description|
 | --- | --- |
+| **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | st_collect | Postgis geometry |
 | wkt | WKT MULTILINESTRING - can be visualize with [this webpage](https://arthur-e.github.io/Wicket/sandbox-gmaps3.html) |

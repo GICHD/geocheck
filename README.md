@@ -283,7 +283,7 @@ List of valid polygons for each IMSMAng object type.
 
 ### geocheck_zint_**!TYPE!**_valid_singlepart_polys
 List of single polygon records.  
-**This view uses the st_removerepeatedfunction to remove duplicate points from polygons.**
+**This view uses the ST_RemoveRepeatedPoints function to remove duplicate points from polygons.**
 
 | Field | Description|
 | --- | --- |
@@ -297,7 +297,7 @@ List of single polygon records.
 
 ### geocheck_zint_**!TYPE!**_valid_multipart_polys
 List of multi polygon records.  
-**This view uses the st_removerepeatedfunction to remove duplicate points from polygons.**
+**This view uses the ST_RemoveRepeatedPoints function to remove duplicate points from polygons.**
 
 | Field | Description|
 | --- | --- |
@@ -306,6 +306,8 @@ List of multi polygon records.
 | shape | Postgis geometry |
 | wkt | WKT MULTILINESTRING - can be visualize with [this webpage](https://arthur-e.github.io/Wicket/sandbox-gmaps3.html) |
 | summary | Polygon description |
+
+[View list](#views-available)
 
 ### geocheck_zint_**!TYPE!**_all_object_polys
 List of all polygons (single and multi).  
@@ -319,7 +321,6 @@ This view is a simple union of geocheck_zint_**!TYPE!**_valid_singlepart_polys a
 | wkt | WKT LINESTRING and MULTILINESTRING - can be visualize with [this webpage](https://arthur-e.github.io/Wicket/sandbox-gmaps3.html) |
 | summary | Polygon description |
 
-[View list](#views-available)
 [View list](#views-available)
 
 ### geocheck_zint_**!TYPE!**_polys 

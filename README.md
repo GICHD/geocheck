@@ -57,7 +57,9 @@ There are 2 types of views:
 | [geocheck_adv_distance_polygon_points](#geocheck_adv_distance_polygon_points) | Geo Check | :warning:| List of polygons defined with a distance between 2 consecutive points higher than the value defined in the query (default is 5000 m) | 
 | [geocheck_adv_overlapping_polygons](#geocheck_adv_overlapping_polygons) | Geo Check | :warning:| List of multipart polygons whose polygons overlap more than a percentage defined in the query (default is 0.9%) | 
 | [geocheck_zint_**!TYPE!**_valid_polys](#geocheck_zint_type_valid_polys) | Information |:information_source: | List of valid polygons |
+| [geocheck_zint_**!TYPE!**_valid_singlepart_polys](#geocheck_zint_type_valid_singlepart_polys) | Information|:information_source: | List of single polygon records|
 | [geocheck_zint_**!TYPE!**_valid_multipart_polys](#geocheck_zint_type_valid_multipart_polys) | Information|:information_source: | List of multi polygon records|
+| [geocheck_zint_**!TYPE!**_all_object_polys](#geocheck_zint_type_all_object_polys) | Information|:information_source: | List of all polygons (single and multi)|
 | [geocheck_zint_**!TYPE!**_polys](#geocheck_zint_type_polys) | Information | :information_source:|  List of polygons created from IMSMAng points |
 | [geocheck_zint_**!TYPE!**_pts](#geocheck_zint_type_pts) | Information |:information_source: | List of points from IMSMAng |
 
@@ -279,17 +281,45 @@ List of valid polygons for each IMSMAng object type.
 
 [View list](#views-available)
 
-### geocheck_zint_**!TYPE!**_valid_multipart_polys
-List of multi polygon records.  
+### geocheck_zint_**!TYPE!**_valid_singlepart_polys
+List of single polygon records.  
+**This view uses the st_removerepeatedfunction to remove duplicate points from polygons.**
 
 | Field | Description|
 | --- | --- |
 | **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
-| st_collect | Postgis geometry |
-| wkt | WKT MULTILINESTRING - can be visualize with [this webpage](https://arthur-e.github.io/Wicket/sandbox-gmaps3.html) |
-| st_summary | Polygon description |
+| shape | Postgis geometry |
+| wkt | WKT LINESTRING - can be visualize with [this webpage](https://arthur-e.github.io/Wicket/sandbox-gmaps3.html) |
+| summary | Polygon description |
 
+[View list](#views-available)
+
+### geocheck_zint_**!TYPE!**_valid_multipart_polys
+List of multi polygon records.  
+**This view uses the st_removerepeatedfunction to remove duplicate points from polygons.**
+
+| Field | Description|
+| --- | --- |
+| **!TYPE!**_guid | IMSMAng GUID |
+| **!TYPE!**_localid | IMSMAng localid |
+| shape | Postgis geometry |
+| wkt | WKT MULTILINESTRING - can be visualize with [this webpage](https://arthur-e.github.io/Wicket/sandbox-gmaps3.html) |
+| summary | Polygon description |
+
+### geocheck_zint_**!TYPE!**_all_object_polys
+List of all polygons (single and multi).  
+This view is a simple union of geocheck_zint_**!TYPE!**_valid_singlepart_polys and geocheck_zint_**!TYPE!**_valid_multipart_polys views.
+
+| Field | Description|
+| --- | --- |
+| **!TYPE!**_guid | IMSMAng GUID |
+| **!TYPE!**_localid | IMSMAng localid |
+| shape | Postgis geometry |
+| wkt | WKT LINESTRING and MULTILINESTRING - can be visualize with [this webpage](https://arthur-e.github.io/Wicket/sandbox-gmaps3.html) |
+| summary | Polygon description |
+
+[View list](#views-available)
 [View list](#views-available)
 
 ### geocheck_zint_**!TYPE!**_polys 

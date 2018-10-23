@@ -109,8 +109,7 @@ List of duplicate polygons based on coordinates in a record for each IMSMAng obj
 | object_type | IMSMAng object type |
 | **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
-| shape | Postgis geometry |
-| count | Number of duplicate polygons for each record|
+| dup_shape_ids | List of duplicate polygon shape ids for each record|
 
 [View list](#views-available)
 
@@ -155,8 +154,7 @@ The issues in the geocheck_duplicate_polygons views must be fixed first before l
 | **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | shapeid | IMSMAng polygon shapeid |
-| shape | Postgis geometry |
-| count | Number of duplicate points based on coordinates for each polygon in each record|
+| dup_point_numbers | List of duplicate point numbers based on coordinates for each polygon in each record|
 
 [View list](#views-available)
 
@@ -173,7 +171,7 @@ The issues in the geocheck_duplicate_polygons and geocheck_duplicate_polygon_poi
 | shape_id | IMSMAng polygon shapeid |
 | pointlocal_id | IMSMAng point localid |
 | pointtypeenum | IMSMAng point type |
-| count | Number of duplicate points based on localid for each polygon in each record|
+| dup_point_numbers | List of duplicate point numbers based on localid for each polygon in each record|
 
 [View list](#views-available)
 
@@ -190,7 +188,7 @@ The issues in the geocheck_duplicate_polygons and geocheck_duplicate_polygon_poi
 | shape_id | IMSMAng polygon shapeid |
 | pointlocal_id | IMSMAng point localid |
 | pointtypeenum | IMSMAng point type |
-| count | Number of duplicate points based on localid for each polygon in each record|
+| dup_point_numbers | List of duplicate point numbers based on localid for each polygon in each record|
 
 [View list](#views-available)
 
@@ -204,8 +202,7 @@ List of duplicate points based on coordinates NOT in a polygon for each IMSMAng 
 | **!TYPE!**_guid | IMSMAng GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | shape_id | IMSMAng polygon shapeid |
-| shape | Postgis geometry |
-| count | Number of duplicate points based on coordinates for each polygon in each record|
+| dup_point_ids | List of duplicate point_ids based on coordinates for each polygon in each record|
 
 [View list](#views-available)
 
@@ -221,7 +218,7 @@ The issues in the geocheck_duplicate_points view must be fixed first before look
 | **!TYPE!**_localid | IMSMAng localid |
 | pointlocal_id | IMSMAng point localid |
 | pointtypeenum | IMSMAng point type |
-| count | Number of duplicate points based on localid for each polygon in each record|
+| dup_point_numbers | List of the duplicate point numbers for each polygon in each record|
 
 [View list](#views-available)
 
@@ -237,7 +234,7 @@ The issues in the geocheck_duplicate_points view must be fixed first before look
 | **!TYPE!**_localid | IMSMAng localid |
 | pointlocal_id | IMSMAng point localid |
 | pointtypeenum | IMSMAng point type |
-| count | Number of duplicate points based on localid for each polygon in each record|
+| dup_point_numbers | List of the duplicate point numbers for each polygon in each record|
 
 [View list](#views-available)
 

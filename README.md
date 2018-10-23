@@ -10,7 +10,8 @@ The checks look at a variety of possible issues:
   - distance between points in a polygon
   - overlapping polygons
 
-The SQL script drop_views.sql can be used to remove all views from IMSMAng.
+The SQL script drop_views.sql can be used to remove all views from IMSMAng. 
+The SQL script issue_count.sql can be used to count all issues detected by the geocheck queries.
 
 ## Who is this for?
 

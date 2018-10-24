@@ -5,7 +5,7 @@ The SQL script geocheck.sql create views in the public schema of IMSMAng that he
 
 The checks look at a variety of possible issues:
   - invalid polygons (IMSMAng does not check if a polygon created by a set of points is valid)
-  - polygons with too many vertices (less than 3)
+  - polygons with too few vertices (less than 3)
   - duplicate information (polygon, point, point or polygon id)
   - distance between points in a polygon
   - overlapping polygons

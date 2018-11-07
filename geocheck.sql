@@ -4,37 +4,6 @@
 -- To change the percentage of overlapping for the overlapping polygons query:
 --  do a replace all on "overlap_perc > 0.9"
 
--- V2
---	Change name to geocheck
---	The views are now created in the public schema
---	Shape_id added to all the invalid polygon views
---	Integration of Polygon_Distance_Check.sql (5000m), the results are in geocheck_distance_polygon_points
---	Queries added for Task, Gazetteer, Location, Place and Organisation
---	Duplicate polygon ID can be found in geocheck_duplicate_polygon_polyid
---	Duplicate point localid can be found in geocheck_duplicate_point_point_localid
---	Duplicate polygons can be found in geocheck_duplicate_polygons
-
--- V2.1
---	Duplicate polygon ID with trimmed ID can be found in geocheck_duplicate_polygon_polyid_trimmed
---	Duplicate point localid with trimmed ID can be found in geocheck_duplicate_point_point_localid_trimmed
---	Duplicate point localid in polygon can be found in geocheck_duplicate_polygon_point_localid
---	Duplicate point localid in polygon with trimmed ID can be found in geocheck_duplicate_polygon_point_localid_trimmed
---	Duplicate point localid in polygon (Dist and Bearing only) can be found in geocheck_duplicate_polygon_point_localid_dist_and_bear
---	Duplicate point localid in polygon (Dist and Bearing only) with trimmed ID can be found in geocheck_duplicate_polygon_point_localid_dist_and_bear_trimmed
-
--- V2.2
---	Duplicate points in polygon can be found in geocheck_duplicate_polygon_points
-
--- V2.3
---	Add geocheck_**_geo_valid_multipart_polys to identify features with multiple polygons defined for one object.
---	Remove SRID information in wkt string to simplify copy/paste
---	Rename intermediary tables with _zint_
-
--- V2.4
--- Overlapping polygons can be found in geocheck_adv_overlapping_polygons
--- Rename geocheck_distance_polygon_points as geocheck_adv_distance_polygon_points
-
-
 -------------------------------
 -- Begin hazard section
 -------------------------------
@@ -3613,6 +3582,121 @@ create or replace view public.geocheck_duplicate_points as
 	order by 3)
 	order by 1, 3;
 
+-------------------------------
+-- Begin duplicate localids section
+-------------------------------
+
+drop view if exists public.geocheck_duplicate_localids CASCADE; 
+create or replace view public.geocheck_duplicate_localids as
+	(select
+		'HAZARD' as object_type,
+		hazard_localid as duplicate_localid,
+		count(*) as duplicate_quantity,
+		string_agg(hazard_guid :: TEXT,', ') as duplicate_guids
+	from hazard
+	group by hazard_localid
+	having count(*) > 1)
+	union
+	(select
+		'HAZARD REDUCTION' as object_type,
+		hazreduc_localid as duplicate_localid,
+		count(*) as duplicate_quantity,
+		string_agg(hazreduc_guid :: TEXT,', ') as duplicate_guids
+	from hazreduc
+	group by hazreduc_localid
+	having count(*) > 1)
+	union
+	(select
+		'ACCIDENT' as object_type,
+		accident_localid as duplicate_localid,
+		count(*) as duplicate_quantity,
+		string_agg(accident_guid :: TEXT,', ') as duplicate_guids
+	from accident
+	group by accident_localid
+	having count(*) > 1)
+	union
+	(select
+		'MRE' as object_type,
+		mre_localid as duplicate_localid,
+		count(*) as duplicate_quantity,
+		string_agg(mre_guid :: TEXT,', ') as duplicate_guids
+	from mre
+	group by mre_localid
+	having count(*) > 1)
+	union
+	(select
+		'QA' as object_type,
+		qa_localid as duplicate_localid,
+		count(*) as duplicate_quantity,
+		string_agg(qa_guid :: TEXT,', ') as duplicate_guids
+	from qa
+	group by qa_localid
+	having count(*) > 1)
+	union
+	(select
+		'VICTIM' as object_type,
+		victim_localid as duplicate_localid,
+		count(*) as duplicate_quantity,
+		string_agg(victim_guid :: TEXT,', ') as duplicate_guids
+	from victim
+	group by victim_localid
+	having count(*) > 1)
+	union
+	(select
+		'GAZETTEER' as object_type,
+		gazetteer_localid as duplicate_localid,
+		count(*) as duplicate_quantity,
+		string_agg(gazetteer_guid :: TEXT,', ') as duplicate_guids
+	from gazetteer
+	group by gazetteer_localid
+	having count(*) > 1)
+	union
+	(select
+		'LOCATION' as object_type,
+		location_localid as duplicate_localid,
+		count(*) as duplicate_quantity,
+		string_agg(location_guid :: TEXT,', ') as duplicate_guids
+	from location
+	group by location_localid
+	having count(*) > 1)
+	union
+	(select
+		'PLACE' as object_type,
+		place_localid as duplicate_localid,
+		count(*) as duplicate_quantity,
+		string_agg(place_guid :: TEXT,', ') as duplicate_guids
+	from place
+	group by place_localid
+	having count(*) > 1)
+	union
+	(select
+		'VICTIM ASSISTANCE' as object_type,
+		localid as duplicate_localid,
+		count(*) as duplicate_quantity,
+		string_agg(guid :: TEXT,', ') as duplicate_guids
+	from victim_assistance
+	group by localid
+	having count(*) > 1)
+	union
+	(select
+		'TASK' as object_type,
+		localid as duplicate_localid,
+		count(*) as duplicate_quantity,
+		string_agg(guid :: TEXT,', ') as duplicate_guids
+	from task
+	group by localid
+	having count(*) > 1)
+	union
+	(select
+		'ORGANISATION' as object_type,
+		org_localid as duplicate_localid,
+		count(*) as duplicate_quantity,
+		string_agg(org_guid :: TEXT,', ') as duplicate_guids
+	from organisation
+	group by org_localid
+	having count(*) > 1)
+	order by 1, 2;
+	
 -------------------------------
 -- Begin overlapping polygon section
 -------------------------------

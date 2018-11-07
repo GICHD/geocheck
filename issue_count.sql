@@ -19,3 +19,5 @@ union all
 (select 'MEDIUM' as priority,'DUPLICATE SINGLE POINTS' as Issue, (select count(*) from public.geocheck_duplicate_points) as count, 'geocheck_duplicate_points' as View )
 union all
 (select 'LOW' as priority,'SINGLE POINTS WITH SAME IDS AND TYPES' as Issue, (select count(*) from public.geocheck_duplicate_point_point_localid) as count, 'geocheck_duplicate_point_point_localid' as View )
+union all
+(select 'MEDIUM' as priority,'OBJECT WITH SAME IDS' as Issue, (select count(*) from public.geocheck_duplicate_localids) as count, 'geocheck_duplicate_localids' as View )

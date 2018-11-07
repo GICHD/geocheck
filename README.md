@@ -55,6 +55,7 @@ There are 2 types of views:
 | [geocheck_duplicate_points](#geocheck_duplicate_points) | Geo Check | :heavy_exclamation_mark:| List of duplicate points based on coordinates NOT in a polygon|
 | [geocheck_duplicate_point_point_localid](#geocheck_duplicate_point_point_localid) | Geo Check | :heavy_exclamation_mark: | List of duplicate points based on localid NOT in a polygon |
 | [geocheck_duplicate_point_point_localid_trimmed](#geocheck_duplicate_point_point_localid_trimmed) | Geo Check | :heavy_exclamation_mark:| List of duplicate points based on trimmed localid NOT in a polygon |
+| [geocheck_duplicate_localids](#geocheck_duplicate_localids) | Data Check | :heavy_exclamation_mark:| List of duplicate objects based on localid |
 | [geocheck_adv_distance_polygon_points](#geocheck_adv_distance_polygon_points) | Geo Check | :warning:| List of polygons defined with a distance between 2 consecutive points higher than the value defined in the query (default is 5000 m) | 
 | [geocheck_adv_overlapping_polygons](#geocheck_adv_overlapping_polygons) | Geo Check | :warning:| List of multipart polygons whose polygons overlap more than a percentage defined in the query (default is 0.9%) | 
 | [geocheck_zint_**!TYPE!**_valid_polys](#geocheck_zint_type_valid_polys) | Information |:information_source: | List of valid polygons |
@@ -236,6 +237,19 @@ The issues in the geocheck_duplicate_points view must be fixed first before look
 | pointlocal_id | IMSMAng point localid |
 | pointtypeenum | IMSMAng point type |
 | dup_point_numbers | List of the duplicate point numbers for each polygon in each record|
+
+[View list](#views-available)
+
+### geocheck_duplicate_localids
+List of duplicate objects based on localid.  
+**This view should be empty.**  
+
+| Field | Description|
+| --- | --- |
+| object_type | IMSMAng object type |
+| duplicate_localid | IMSMAng localid |
+| duplicate_quantity | Number of duplicates per localid |
+| duplicate_guids | List of the guids for each duplicate object|
 
 [View list](#views-available)
 

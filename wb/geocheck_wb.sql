@@ -12,9 +12,8 @@ create or replace view public.wb_geocheck_zint_hazard_pts as
 
    select
 	fieldreport.fieldreport_localid,
-	hazardinfoversion.hazard_guid,
+	fieldreport.fieldreport_guid,
 	hazardinfoversion.hazard_localid,
-	hazardinfoversion.fieldreport_guid,
 	hazardinfoversion_has_geospatialinfo.geospatialinfo_guid,
 	ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 	geospatialinfo.shape_id,
@@ -60,48 +59,48 @@ create or replace view public.wb_geocheck_zint_hazard_pts as
 -- This view can be materialized in PostgreSQL 9.3+
 drop view if exists public.wb_geocheck_zint_hazard_polys CASCADE;
 create or replace view public.wb_geocheck_zint_hazard_polys as
-	select fieldreport_localid, hazard_guid, hazard_localid, shape_id,
+	select fieldreport_localid, fieldreport_guid, hazard_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
-	from (select fieldreport_localid, hazard_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
+	from (select fieldreport_localid, fieldreport_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.wb_geocheck_zint_hazard_pts where shapeenum = 'Polygon' 
-		order by hazard_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno) as values 
-	group by fieldreport_localid, hazard_guid, hazard_localid, shape_id, geospatialinfo_guid having count(*) > 2
-	order by hazard_guid;
+		order by fieldreport_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno) as values 
+	group by fieldreport_localid, fieldreport_guid, hazard_localid, shape_id, geospatialinfo_guid having count(*) > 2
+	order by fieldreport_guid;
 						
 -- create view to list only low-vertex polygons
 drop view if exists public.wb_geocheck_obj_hazard_few_vertices_polys CASCADE;
 create or replace view public.wb_geocheck_obj_hazard_few_vertices_polys as
-	select hazard_guid, hazard_localid, shape_id, count(*) as pointcount
-	from (select hazard_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
+	select fieldreport_guid, hazard_localid, shape_id, count(*) as pointcount
+	from (select fieldreport_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.wb_geocheck_zint_hazard_pts where shapeenum = 'Polygon' 
-		order by hazard_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno) as values 
-	group by hazard_guid, hazard_localid, shape_id, geospatialinfo_guid having count(*) < 3
-	order by hazard_guid;
+		order by fieldreport_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno) as values 
+	group by fieldreport_guid, hazard_localid, shape_id, geospatialinfo_guid having count(*) < 3
+	order by fieldreport_guid;
 
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
 drop view if exists public.wb_geocheck_zint_hazard_valid_polys CASCADE;
 create view public.wb_geocheck_zint_hazard_valid_polys as
-	select hazard_guid, hazard_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.wb_geocheck_zint_hazard_polys where ST_IsValid(shape) = 't';
+	select fieldreport_guid, hazard_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.wb_geocheck_zint_hazard_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid single-part polygons within that view (extracts valid polygons only)
 drop view if exists public.wb_geocheck_zint_hazard_valid_singlepart_polys CASCADE;
 create view public.wb_geocheck_zint_hazard_valid_singlepart_polys as
 	select
-	hazard_guid,
+	fieldreport_guid,
 	hazard_localid,
 	st_removerepeatedpoints(shape) as shape,
 	substr(st_asewkt(st_exteriorring(st_removerepeatedpoints(shape))),11) as wkt,
 	st_summary(st_removerepeatedpoints(shape)) as summary
 	from public.wb_geocheck_zint_hazard_polys
 	where ST_IsValid(shape) = 't'
-		and hazard_guid in
+		and fieldreport_guid in
 			(select
-			hazard_guid 
+			fieldreport_guid 
 			from public.wb_geocheck_zint_hazard_pts 
 			where shapeenum = 'Polygon' 
-			group by hazard_guid 
+			group by fieldreport_guid 
 			having count(distinct(geospatialinfo_guid)) = 1 
 			order by 1);
 			
@@ -109,19 +108,19 @@ create view public.wb_geocheck_zint_hazard_valid_singlepart_polys as
 drop view if exists public.wb_geocheck_zint_hazard_valid_multipart_polys CASCADE;
 create view public.wb_geocheck_zint_hazard_valid_multipart_polys as
 	select
-	hazard_guid,
+	fieldreport_guid,
 	hazard_localid,
 	st_collect(st_removerepeatedpoints(shape)) as shape,
 	substr(st_asewkt(st_collect(st_exteriorring(st_removerepeatedpoints(shape)))),11) as wkt,
 	st_summary(st_collect(st_removerepeatedpoints(shape))) as summary
 	from public.wb_geocheck_zint_hazard_valid_polys 
-	group by hazard_guid, hazard_localid
-	having hazard_guid in
+	group by fieldreport_guid, hazard_localid
+	having fieldreport_guid in
 		(select
-		hazard_guid 
+		fieldreport_guid 
 		from public.wb_geocheck_zint_hazard_pts 
 		where shapeenum = 'Polygon' 
-		group by hazard_guid 
+		group by fieldreport_guid 
 		having count(distinct(geospatialinfo_guid)) > 1 
 		order by 1);
 		
@@ -135,7 +134,7 @@ create view public.wb_geocheck_zint_hazard_all_object_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.wb_geocheck_obj_hazard_invalid_polys CASCADE;
 create view public.wb_geocheck_obj_hazard_invalid_polys as
-	select fieldreport_localid, hazard_guid, hazard_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.wb_geocheck_zint_hazard_polys where ST_IsValid(shape) = 'f';
+	select fieldreport_localid, fieldreport_guid, hazard_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.wb_geocheck_zint_hazard_polys where ST_IsValid(shape) = 'f';
 
 
 -------------------------------
@@ -149,9 +148,8 @@ create or replace view public.wb_geocheck_zint_hazreduc_pts as
 
 	select
 	fieldreport.fieldreport_localid,
-	hazreducinfoversion.hazreduc_guid,
+	fieldreport.fieldreport_guid,
 	hazreducinfoversion.hazreduc_localid,
-	hazreducinfoversion.fieldreport_guid,
 	hazreducinfoversion_has_geospatialinfo.geospatialinfo_guid,
 	ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 	geospatialinfo.shape_id,
@@ -197,48 +195,48 @@ create or replace view public.wb_geocheck_zint_hazreduc_pts as
 -- This view can be materialized in PostgreSQL 9.3+
 drop view if exists public.wb_geocheck_zint_hazreduc_polys CASCADE;
 create or replace view public.wb_geocheck_zint_hazreduc_polys as
-	select fieldreport_localid, hazreduc_guid, hazreduc_localid, shape_id,
+	select fieldreport_localid, fieldreport_guid, hazreduc_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
-	from (select fieldreport_localid, hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
+	from (select fieldreport_localid, fieldreport_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.wb_geocheck_zint_hazreduc_pts where shapeenum = 'Polygon' 
-		order by hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno) as values 
-	group by fieldreport_localid, hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid  having count(*) > 2
-	order by hazreduc_guid;
+		order by fieldreport_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno) as values 
+	group by fieldreport_localid, fieldreport_guid, hazreduc_localid, shape_id, geospatialinfo_guid  having count(*) > 2
+	order by fieldreport_guid;
 
 -- create view to list only low-vertex polygons
 drop view if exists public.wb_geocheck_obj_hazreduc_few_vertices_polys CASCADE;
 create or replace view public.wb_geocheck_obj_hazreduc_few_vertices_polys as
-    select hazreduc_guid, hazreduc_localid, shape_id, count(*) as pointcount
-    from (select hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
+    select fieldreport_guid, hazreduc_localid, shape_id, count(*) as pointcount
+    from (select fieldreport_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
         from public.wb_geocheck_zint_hazreduc_pts where shapeenum = 'Polygon' 
-        order by hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno) as values 
-    group by hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid  having count(*) < 3
-    order by hazreduc_guid;
+        order by fieldreport_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno) as values 
+    group by fieldreport_guid, hazreduc_localid, shape_id, geospatialinfo_guid  having count(*) < 3
+    order by fieldreport_guid;
 
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
 drop view if exists public.wb_geocheck_zint_hazreduc_valid_polys CASCADE;
 create view public.wb_geocheck_zint_hazreduc_valid_polys as
-select hazreduc_guid, hazreduc_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.wb_geocheck_zint_hazreduc_polys where ST_IsValid(shape) = 't';
+select fieldreport_guid, hazreduc_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.wb_geocheck_zint_hazreduc_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid single-part polygons within that view (extracts valid polygons only)
 drop view if exists public.wb_geocheck_zint_hazreduc_valid_singlepart_polys CASCADE;
 create view public.wb_geocheck_zint_hazreduc_valid_singlepart_polys as
 	select
-	hazreduc_guid,
+	fieldreport_guid,
 	hazreduc_localid,
 	st_removerepeatedpoints(shape) as shape,
 	substr(st_asewkt(st_exteriorring(st_removerepeatedpoints(shape))),11) as wkt,
 	st_summary(st_removerepeatedpoints(shape)) as summary
 	from public.wb_geocheck_zint_hazreduc_polys
 	where ST_IsValid(shape) = 't'
-		and hazreduc_guid in
+		and fieldreport_guid in
 			(select
-			hazreduc_guid 
+			fieldreport_guid 
 			from public.wb_geocheck_zint_hazreduc_pts 
 			where shapeenum = 'Polygon' 
-			group by hazreduc_guid 
+			group by fieldreport_guid 
 			having count(distinct(geospatialinfo_guid)) = 1 
 			order by 1);
 			
@@ -246,19 +244,19 @@ create view public.wb_geocheck_zint_hazreduc_valid_singlepart_polys as
 drop view if exists public.wb_geocheck_zint_hazreduc_valid_multipart_polys CASCADE;
 create view public.wb_geocheck_zint_hazreduc_valid_multipart_polys as
 	select
-	hazreduc_guid,
+	fieldreport_guid,
 	hazreduc_localid,
 	st_collect(st_removerepeatedpoints(shape)) as shape,
 	substr(st_asewkt(st_collect(st_exteriorring(st_removerepeatedpoints(shape)))),11) as wkt,
 	st_summary(st_collect(st_removerepeatedpoints(shape))) as summary
 	from public.wb_geocheck_zint_hazreduc_valid_polys 
-	group by hazreduc_guid, hazreduc_localid
-	having hazreduc_guid in
+	group by fieldreport_guid, hazreduc_localid
+	having fieldreport_guid in
 		(select
-		hazreduc_guid 
+		fieldreport_guid 
 		from public.wb_geocheck_zint_hazreduc_pts 
 		where shapeenum = 'Polygon' 
-		group by hazreduc_guid 
+		group by fieldreport_guid 
 		having count(distinct(geospatialinfo_guid)) > 1 
 		order by 1);
 		
@@ -272,7 +270,7 @@ create view public.wb_geocheck_zint_hazreduc_all_object_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.wb_geocheck_obj_hazreduc_invalid_polys CASCADE;
 create view public.wb_geocheck_obj_hazreduc_invalid_polys as
-	select fieldreport_localid, hazreduc_guid, hazreduc_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.wb_geocheck_zint_hazreduc_polys where ST_IsValid(shape) = 'f';
+	select fieldreport_localid, fieldreport_guid, hazreduc_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.wb_geocheck_zint_hazreduc_polys where ST_IsValid(shape) = 'f';
 
 
 -------------------------------
@@ -286,9 +284,8 @@ create or replace view public.wb_geocheck_zint_accident_pts as
 
 	select
 	fieldreport.fieldreport_localid,
-	accidentinfoversion.accident_guid,
+	fieldreport.fieldreport_guid,
 	accidentinfoversion.accident_localid,
-	accidentinfoversion.fieldreport_guid,
 	accidentinfoversion_has_geospatialinfo.geospatialinfo_guid,
 	ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 	geospatialinfo.shape_id,
@@ -334,48 +331,48 @@ create or replace view public.wb_geocheck_zint_accident_pts as
 -- This view can be materialized in PostgreSQL 9.3+
 drop view if exists public.wb_geocheck_zint_accident_polys CASCADE;
 create or replace view public.wb_geocheck_zint_accident_polys as
-	select fieldreport_localid, accident_guid, accident_localid, shape_id,
+	select fieldreport_localid, fieldreport_guid, accident_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
-	from (select fieldreport_localid, accident_guid, accident_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
+	from (select fieldreport_localid, fieldreport_guid, accident_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.wb_geocheck_zint_accident_pts where shapeenum = 'Polygon' 
-		order by accident_guid, accident_localid, shape_id, geospatialinfo_guid, pointno)	as values 
-	group by fieldreport_localid, accident_guid, accident_localid, shape_id, geospatialinfo_guid  having count(*) > 2
-	order by accident_guid;
+		order by fieldreport_guid, accident_localid, shape_id, geospatialinfo_guid, pointno)	as values 
+	group by fieldreport_localid, fieldreport_guid, accident_localid, shape_id, geospatialinfo_guid  having count(*) > 2
+	order by fieldreport_guid;
 
 -- create view to list only low-vertex polygons
 drop view if exists public.wb_geocheck_obj_accident_few_vertices_polys CASCADE;
 create or replace view public.wb_geocheck_obj_accident_few_vertices_polys as
-	select accident_guid, accident_localid, shape_id, count(*) as pointcount
-	from (select accident_guid, accident_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
+	select fieldreport_guid, accident_localid, shape_id, count(*) as pointcount
+	from (select fieldreport_guid, accident_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.wb_geocheck_zint_accident_pts where shapeenum = 'Polygon' 
-		order by accident_guid, accident_localid, shape_id, geospatialinfo_guid, pointno) as values 
-	group by accident_guid, accident_localid, shape_id, geospatialinfo_guid  having count(*) < 3
-	order by accident_guid;
+		order by fieldreport_guid, accident_localid, shape_id, geospatialinfo_guid, pointno) as values 
+	group by fieldreport_guid, accident_localid, shape_id, geospatialinfo_guid  having count(*) < 3
+	order by fieldreport_guid;
 						
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
 drop view if exists public.wb_geocheck_zint_accident_valid_polys CASCADE;
 create view public.wb_geocheck_zint_accident_valid_polys as
-	select accident_guid, accident_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.wb_geocheck_zint_accident_polys where ST_IsValid(shape) = 't';
+	select fieldreport_guid, accident_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.wb_geocheck_zint_accident_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid single-part polygons within that view (extracts valid polygons only)
 drop view if exists public.wb_geocheck_zint_accident_valid_singlepart_polys CASCADE;
 create view public.wb_geocheck_zint_accident_valid_singlepart_polys as
 	select
-	accident_guid,
+	fieldreport_guid,
 	accident_localid,
 	st_removerepeatedpoints(shape) as shape,
 	substr(st_asewkt(st_exteriorring(st_removerepeatedpoints(shape))),11) as wkt,
 	st_summary(st_removerepeatedpoints(shape)) as summary
 	from public.wb_geocheck_zint_accident_polys
 	where ST_IsValid(shape) = 't'
-		and accident_guid in
+		and fieldreport_guid in
 			(select
-			accident_guid 
+			fieldreport_guid 
 			from public.wb_geocheck_zint_accident_pts 
 			where shapeenum = 'Polygon' 
-			group by accident_guid 
+			group by fieldreport_guid 
 			having count(distinct(geospatialinfo_guid)) = 1 
 			order by 1);
 			
@@ -383,19 +380,19 @@ create view public.wb_geocheck_zint_accident_valid_singlepart_polys as
 drop view if exists public.wb_geocheck_zint_accident_valid_multipart_polys CASCADE;
 create view public.wb_geocheck_zint_accident_valid_multipart_polys as
 	select
-	accident_guid,
+	fieldreport_guid,
 	accident_localid,
 	st_collect(st_removerepeatedpoints(shape)) as shape,
 	substr(st_asewkt(st_collect(st_exteriorring(st_removerepeatedpoints(shape)))),11) as wkt,
 	st_summary(st_collect(st_removerepeatedpoints(shape))) as summary
 	from public.wb_geocheck_zint_accident_valid_polys 
-	group by accident_guid, accident_localid
-	having accident_guid in
+	group by fieldreport_guid, accident_localid
+	having fieldreport_guid in
 		(select
-		accident_guid 
+		fieldreport_guid 
 		from public.wb_geocheck_zint_accident_pts 
 		where shapeenum = 'Polygon' 
-		group by accident_guid 
+		group by fieldreport_guid 
 		having count(distinct(geospatialinfo_guid)) > 1 
 		order by 1);
 		
@@ -409,7 +406,7 @@ select * from wb_geocheck_zint_accident_valid_multipart_polys;
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.wb_geocheck_obj_accident_invalid_polys CASCADE;
 create view public.wb_geocheck_obj_accident_invalid_polys as
-	select fieldreport_localid, accident_guid, accident_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.wb_geocheck_zint_accident_polys where ST_IsValid(shape) = 'f';
+	select fieldreport_localid, fieldreport_guid, accident_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.wb_geocheck_zint_accident_polys where ST_IsValid(shape) = 'f';
 
 
 -------------------------------
@@ -423,9 +420,8 @@ create or replace view public.wb_geocheck_zint_mre_pts as
 
 	select
 	fieldreport.fieldreport_localid,
-	mreinfoversion.mre_guid,
+	fieldreport.fieldreport_guid,
 	mreinfoversion.mre_localid,
-	mreinfoversion.fieldreport_guid,
 	mreinfoversion_has_geospatialinfo.geospatialinfo_guid,
 	ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 	geospatialinfo.shape_id,
@@ -471,48 +467,48 @@ create or replace view public.wb_geocheck_zint_mre_pts as
 -- This view can be materialized in PostgreSQL 9.3+
 drop view if exists public.wb_geocheck_zint_mre_polys CASCADE;
 create or replace view public.wb_geocheck_zint_mre_polys as
-	select fieldreport_localid, mre_guid, mre_localid, shape_id,
+	select fieldreport_localid, fieldreport_guid, mre_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
-	from (select fieldreport_localid, mre_guid, mre_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
+	from (select fieldreport_localid, fieldreport_guid, mre_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.wb_geocheck_zint_mre_pts where shapeenum = 'Polygon' 
-		order by mre_guid, mre_localid, shape_id, geospatialinfo_guid, pointno) as values 
-	group by fieldreport_localid, mre_guid, mre_localid, shape_id, geospatialinfo_guid  having count(*) > 2
-	order by mre_guid;
+		order by fieldreport_guid, mre_localid, shape_id, geospatialinfo_guid, pointno) as values 
+	group by fieldreport_localid, fieldreport_guid, mre_localid, shape_id, geospatialinfo_guid  having count(*) > 2
+	order by fieldreport_guid;
 
 -- create view to list only low-vertex polygons
 drop view if exists public.wb_geocheck_obj_mre_few_vertices_polys CASCADE;
 create or replace view public.wb_geocheck_obj_mre_few_vertices_polys as
-	select mre_guid, mre_localid, shape_id, count(*) as pointcount
-	from (select mre_guid, mre_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
+	select fieldreport_guid, mre_localid, shape_id, count(*) as pointcount
+	from (select fieldreport_guid, mre_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.wb_geocheck_zint_mre_pts where shapeenum = 'Polygon' 
-		order by mre_guid, mre_localid, shape_id, geospatialinfo_guid, pointno) as values 
-	group by mre_guid, mre_localid, shape_id, geospatialinfo_guid  having count(*) < 3
-	order by mre_guid;
+		order by fieldreport_guid, mre_localid, shape_id, geospatialinfo_guid, pointno) as values 
+	group by fieldreport_guid, mre_localid, shape_id, geospatialinfo_guid  having count(*) < 3
+	order by fieldreport_guid;
 						
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
 drop view if exists public.wb_geocheck_zint_mre_valid_polys CASCADE;
 create view public.wb_geocheck_zint_mre_valid_polys as
-	select mre_guid, mre_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.wb_geocheck_zint_mre_polys where ST_IsValid(shape) = 't';
+	select fieldreport_guid, mre_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.wb_geocheck_zint_mre_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid single-part polygons within that view (extracts valid polygons only)
 drop view if exists public.wb_geocheck_zint_mre_valid_singlepart_polys CASCADE;
 create view public.wb_geocheck_zint_mre_valid_singlepart_polys as
 	select
-	mre_guid,
+	fieldreport_guid,
 	mre_localid,
 	st_removerepeatedpoints(shape) as shape,
 	substr(st_asewkt(st_exteriorring(st_removerepeatedpoints(shape))),11) as wkt,
 	st_summary(st_removerepeatedpoints(shape)) as summary
 	from public.wb_geocheck_zint_mre_polys
 	where ST_IsValid(shape) = 't'
-		and mre_guid in
+		and fieldreport_guid in
 			(select
-			mre_guid 
+			fieldreport_guid 
 			from public.wb_geocheck_zint_mre_pts 
 			where shapeenum = 'Polygon' 
-			group by mre_guid 
+			group by fieldreport_guid 
 			having count(distinct(geospatialinfo_guid)) = 1 
 			order by 1);
 			
@@ -520,19 +516,19 @@ create view public.wb_geocheck_zint_mre_valid_singlepart_polys as
 drop view if exists public.wb_geocheck_zint_mre_valid_multipart_polys CASCADE;
 create view public.wb_geocheck_zint_mre_valid_multipart_polys as
 	select
-	mre_guid,
+	fieldreport_guid,
 	mre_localid,
 	st_collect(st_removerepeatedpoints(shape)) as shape,
 	substr(st_asewkt(st_collect(st_exteriorring(st_removerepeatedpoints(shape)))),11) as wkt,
 	st_summary(st_collect(st_removerepeatedpoints(shape))) as summary
 	from public.wb_geocheck_zint_mre_valid_polys 
-	group by mre_guid, mre_localid
-	having mre_guid in
+	group by fieldreport_guid, mre_localid
+	having fieldreport_guid in
 		(select
-		mre_guid 
+		fieldreport_guid 
 		from public.wb_geocheck_zint_mre_pts 
 		where shapeenum = 'Polygon' 
-		group by mre_guid 
+		group by fieldreport_guid 
 		having count(distinct(geospatialinfo_guid)) > 1 
 		order by 1);
 		
@@ -546,7 +542,7 @@ create view public.wb_geocheck_zint_mre_all_object_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.wb_geocheck_obj_mre_invalid_polys CASCADE;
 create view public.wb_geocheck_obj_mre_invalid_polys as
-	select fieldreport_localid, mre_guid, mre_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.wb_geocheck_zint_mre_polys where ST_IsValid(shape) = 'f';
+	select fieldreport_localid, fieldreport_guid, mre_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.wb_geocheck_zint_mre_polys where ST_IsValid(shape) = 'f';
 	
 -------------------------------
 -- Begin qa section
@@ -559,9 +555,8 @@ create or replace view public.wb_geocheck_zint_qa_pts as
 
 	select
 	fieldreport.fieldreport_localid,
-	qainfoversion.qa_guid,
+	fieldreport.fieldreport_guid,
 	qainfoversion.qa_localid,
-	qainfoversion.fieldreport_guid,
 	qainfoversion_has_geospatialinfo.geospatialinfo_guid,
 	ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 	geospatialinfo.shape_id,
@@ -607,48 +602,48 @@ create or replace view public.wb_geocheck_zint_qa_pts as
 -- This view can be materialized in PostgreSQL 9.3+
 drop view if exists public.wb_geocheck_zint_qa_polys CASCADE;
 create or replace view public.wb_geocheck_zint_qa_polys as
-	select fieldreport_localid, qa_guid, qa_localid, shape_id,
+	select fieldreport_localid, fieldreport_guid, qa_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
-	from (select fieldreport_localid, qa_guid, qa_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
+	from (select fieldreport_localid, fieldreport_guid, qa_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.wb_geocheck_zint_qa_pts where shapeenum = 'Polygon' 
-		order by qa_guid, qa_localid, shape_id, geospatialinfo_guid, pointno) as values 
-	group by fieldreport_localid, qa_guid, qa_localid, shape_id, geospatialinfo_guid  having count(*) > 2
-	order by qa_guid;
+		order by fieldreport_guid, qa_localid, shape_id, geospatialinfo_guid, pointno) as values 
+	group by fieldreport_localid, fieldreport_guid, qa_localid, shape_id, geospatialinfo_guid  having count(*) > 2
+	order by fieldreport_guid;
 
 -- create view to list only low-vertex polygons
 drop view if exists public.wb_geocheck_obj_qa_few_vertices_polys CASCADE;
 create or replace view public.wb_geocheck_obj_qa_few_vertices_polys as
-	select qa_guid, qa_localid, shape_id, count(*) as pointcount
-	from (select qa_guid, qa_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
+	select fieldreport_guid, qa_localid, shape_id, count(*) as pointcount
+	from (select fieldreport_guid, qa_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.wb_geocheck_zint_qa_pts where shapeenum = 'Polygon' 
-		order by qa_guid, qa_localid, shape_id, geospatialinfo_guid, pointno) as values 
-	group by qa_guid, qa_localid, shape_id, geospatialinfo_guid  having count(*) < 3
-	order by qa_guid;
+		order by fieldreport_guid, qa_localid, shape_id, geospatialinfo_guid, pointno) as values 
+	group by fieldreport_guid, qa_localid, shape_id, geospatialinfo_guid  having count(*) < 3
+	order by fieldreport_guid;
 						
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
 drop view if exists public.wb_geocheck_zint_qa_valid_polys CASCADE;
 create view public.wb_geocheck_zint_qa_valid_polys as
-	select qa_guid, qa_localid, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.wb_geocheck_zint_qa_polys where ST_IsValid(shape) = 't';
+	select fieldreport_guid, qa_localid, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.wb_geocheck_zint_qa_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid single-part polygons within that view (extracts valid polygons only)
 drop view if exists public.wb_geocheck_zint_qa_valid_singlepart_polys CASCADE;
 create view public.wb_geocheck_zint_qa_valid_singlepart_polys as
 	select
-	qa_guid,
+	fieldreport_guid,
 	qa_localid,
 	st_removerepeatedpoints(shape) as shape,
 	substr(st_asewkt(st_exteriorring(st_removerepeatedpoints(shape))),11) as wkt,
 	st_summary(st_removerepeatedpoints(shape)) as summary
 	from public.wb_geocheck_zint_qa_polys
 	where ST_IsValid(shape) = 't'
-		and qa_guid in
+		and fieldreport_guid in
 			(select
-			qa_guid 
+			fieldreport_guid 
 			from public.wb_geocheck_zint_qa_pts 
 			where shapeenum = 'Polygon' 
-			group by qa_guid 
+			group by fieldreport_guid 
 			having count(distinct(geospatialinfo_guid)) = 1 
 			order by 1);
 			
@@ -656,19 +651,19 @@ create view public.wb_geocheck_zint_qa_valid_singlepart_polys as
 drop view if exists public.wb_geocheck_zint_qa_valid_multipart_polys CASCADE;
 create view public.wb_geocheck_zint_qa_valid_multipart_polys as
 	select
-	qa_guid,
+	fieldreport_guid,
 	qa_localid,
 	st_collect(st_removerepeatedpoints(shape)) as shape,
 	substr(st_asewkt(st_collect(st_exteriorring(st_removerepeatedpoints(shape)))),11) as wkt,
 	st_summary(st_collect(st_removerepeatedpoints(shape))) as summary
 	from public.wb_geocheck_zint_qa_valid_polys 
-	group by qa_guid, qa_localid
-	having qa_guid in
+	group by fieldreport_guid, qa_localid
+	having fieldreport_guid in
 		(select
-		qa_guid 
+		fieldreport_guid 
 		from public.wb_geocheck_zint_qa_pts 
 		where shapeenum = 'Polygon' 
-		group by qa_guid 
+		group by fieldreport_guid 
 		having count(distinct(geospatialinfo_guid)) > 1 
 		order by 1);
 		
@@ -682,7 +677,7 @@ create view public.wb_geocheck_zint_qa_all_object_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.wb_geocheck_obj_qa_invalid_polys CASCADE;
 create view public.wb_geocheck_obj_qa_invalid_polys as
-	select fieldreport_localid, qa_guid, qa_localid, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.wb_geocheck_zint_qa_polys where ST_IsValid(shape) = 'f';
+	select fieldreport_localid, fieldreport_guid, qa_localid, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.wb_geocheck_zint_qa_polys where ST_IsValid(shape) = 'f';
 	
 -------------------------------
 -- Begin victim section
@@ -695,9 +690,8 @@ create or replace view public.wb_geocheck_zint_victim_pts as
 
 	select
 	fieldreport.fieldreport_localid,
-	victiminfoversion.victim_guid,
+	fieldreport.fieldreport_guid,
 	victiminfoversion.victim_localid,
-	victiminfoversion.fieldreport_guid,
 	victiminfoversion_has_geospatialinfo.geospatialinfo_guid,
 	ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 	geospatialinfo.shape_id,
@@ -743,48 +737,48 @@ create or replace view public.wb_geocheck_zint_victim_pts as
 -- This view can be materialized in PostgreSQL 9.3+
 drop view if exists public.wb_geocheck_zint_victim_polys CASCADE;
 create or replace view public.wb_geocheck_zint_victim_polys as
-	select fieldreport_localid, victim_guid, victim_localid, shape_id,
+	select fieldreport_localid, fieldreport_guid, victim_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
-	from (select fieldreport_localid, victim_guid, victim_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
+	from (select fieldreport_localid, fieldreport_guid, victim_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.wb_geocheck_zint_victim_pts where shapeenum = 'Polygon' 
-		order by victim_guid, victim_localid, shape_id, geospatialinfo_guid, pointno) as values 
-	group by fieldreport_localid, victim_guid, victim_localid, shape_id, geospatialinfo_guid  having count(*) > 2
-	order by victim_guid;
+		order by fieldreport_guid, victim_localid, shape_id, geospatialinfo_guid, pointno) as values 
+	group by fieldreport_localid, fieldreport_guid, victim_localid, shape_id, geospatialinfo_guid  having count(*) > 2
+	order by fieldreport_guid;
 
 -- create view to list only low-vertex polygons
 drop view if exists public.wb_geocheck_obj_victim_few_vertices_polys CASCADE;
 create or replace view public.wb_geocheck_obj_victim_few_vertices_polys as
-	select victim_guid, victim_localid, shape_id, count(*) as pointcount
-	from (select victim_guid, victim_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
+	select fieldreport_guid, victim_localid, shape_id, count(*) as pointcount
+	from (select fieldreport_guid, victim_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.wb_geocheck_zint_victim_pts where shapeenum = 'Polygon' 
-		order by victim_guid, victim_localid, shape_id, geospatialinfo_guid, pointno) as values 
-	group by victim_guid, victim_localid, shape_id, geospatialinfo_guid  having count(*) < 3
-	order by victim_guid;
+		order by fieldreport_guid, victim_localid, shape_id, geospatialinfo_guid, pointno) as values 
+	group by fieldreport_guid, victim_localid, shape_id, geospatialinfo_guid  having count(*) < 3
+	order by fieldreport_guid;
 						
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
 drop view if exists public.wb_geocheck_zint_victim_valid_polys CASCADE;
 create view public.wb_geocheck_zint_victim_valid_polys as
-	select victim_guid, victim_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.wb_geocheck_zint_victim_polys where ST_IsValid(shape) = 't';
+	select fieldreport_guid, victim_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.wb_geocheck_zint_victim_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid single-part polygons within that view (extracts valid polygons only)
 drop view if exists public.wb_geocheck_zint_victim_valid_singlepart_polys CASCADE;
 create view public.wb_geocheck_zint_victim_valid_singlepart_polys as
 	select
-	victim_guid,
+	fieldreport_guid,
 	victim_localid,
 	st_removerepeatedpoints(shape) as shape,
 	substr(st_asewkt(st_exteriorring(st_removerepeatedpoints(shape))),11) as wkt,
 	st_summary(st_removerepeatedpoints(shape)) as summary
 	from public.wb_geocheck_zint_victim_polys
 	where ST_IsValid(shape) = 't'
-		and victim_guid in
+		and fieldreport_guid in
 			(select
-			victim_guid 
+			fieldreport_guid 
 			from public.wb_geocheck_zint_victim_pts 
 			where shapeenum = 'Polygon' 
-			group by victim_guid 
+			group by fieldreport_guid 
 			having count(distinct(geospatialinfo_guid)) = 1 
 			order by 1);
 			
@@ -792,19 +786,19 @@ create view public.wb_geocheck_zint_victim_valid_singlepart_polys as
 drop view if exists public.wb_geocheck_zint_victim_valid_multipart_polys CASCADE;
 create view public.wb_geocheck_zint_victim_valid_multipart_polys as
 	select
-	victim_guid,
+	fieldreport_guid,
 	victim_localid,
 	st_collect(st_removerepeatedpoints(shape)) as shape,
 	substr(st_asewkt(st_collect(st_exteriorring(st_removerepeatedpoints(shape)))),11) as wkt,
 	st_summary(st_collect(st_removerepeatedpoints(shape))) as summary
 	from public.wb_geocheck_zint_victim_valid_polys 
-	group by victim_guid, victim_localid
-	having victim_guid in
+	group by fieldreport_guid, victim_localid
+	having fieldreport_guid in
 		(select
-		victim_guid 
+		fieldreport_guid 
 		from public.wb_geocheck_zint_victim_pts 
 		where shapeenum = 'Polygon' 
-		group by victim_guid 
+		group by fieldreport_guid 
 		having count(distinct(geospatialinfo_guid)) > 1 
 		order by 1);
 		
@@ -818,7 +812,7 @@ create view public.wb_geocheck_zint_victim_all_object_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.wb_geocheck_obj_victim_invalid_polys CASCADE;
 create view public.wb_geocheck_obj_victim_invalid_polys as
-	select fieldreport_localid, victim_guid, victim_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.wb_geocheck_zint_victim_polys where ST_IsValid(shape) = 'f';
+	select fieldreport_localid, fieldreport_guid, victim_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.wb_geocheck_zint_victim_polys where ST_IsValid(shape) = 'f';
 
 -------------------------------
 -- Begin victim_assistance section
@@ -831,9 +825,8 @@ create or replace view public.wb_geocheck_zint_victim_assistance_pts as
 
 	select
 	fieldreport.fieldreport_localid,
-	victim_assistance_version.guid,
+	fieldreport.fieldreport_guid,
 	victim_assistance_version.localid,
-	victim_assistance_version.fieldreport_guid,
 	victim_assistance_version_has_geospatialinfo.geospatialinfo_guid,
 	ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 	geospatialinfo.shape_id,
@@ -879,48 +872,48 @@ create or replace view public.wb_geocheck_zint_victim_assistance_pts as
 -- This view can be materialized in PostgreSQL 9.3+
 drop view if exists public.wb_geocheck_zint_victim_assistance_polys CASCADE;
 create or replace view public.wb_geocheck_zint_victim_assistance_polys as
-	select fieldreport_localid, guid, localid, shape_id,
+	select fieldreport_localid, fieldreport_guid, localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
-	from (select fieldreport_localid, guid, localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
+	from (select fieldreport_localid, fieldreport_guid, localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.wb_geocheck_zint_victim_assistance_pts where shapeenum = 'Polygon' 
-		order by guid, localid, shape_id, geospatialinfo_guid, pointno) as values 
-	group by fieldreport_localid, guid, localid, shape_id, geospatialinfo_guid  having count(*) > 2
-	order by guid;
+		order by fieldreport_guid, localid, shape_id, geospatialinfo_guid, pointno) as values 
+	group by fieldreport_localid, fieldreport_guid, localid, shape_id, geospatialinfo_guid  having count(*) > 2
+	order by fieldreport_guid;
 
 -- create view to list only low-vertex polygons
 drop view if exists public.wb_geocheck_obj_victim_assistance_few_vertices_polys CASCADE;
 create or replace view public.wb_geocheck_obj_victim_assistance_few_vertices_polys as
-	select guid, localid, shape_id, count(*) as pointcount
-	from (select guid, localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
+	select fieldreport_guid, localid, shape_id, count(*) as pointcount
+	from (select fieldreport_guid, localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.wb_geocheck_zint_victim_assistance_pts where shapeenum = 'Polygon' 
-		order by guid, localid, shape_id, geospatialinfo_guid, pointno) as values 
-	group by guid, localid, shape_id, geospatialinfo_guid  having count(*) < 3
-	order by guid;
+		order by fieldreport_guid, localid, shape_id, geospatialinfo_guid, pointno) as values 
+	group by fieldreport_guid, localid, shape_id, geospatialinfo_guid  having count(*) < 3
+	order by fieldreport_guid;
 						
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
 drop view if exists public.wb_geocheck_zint_victim_assistance_valid_polys CASCADE;
 create view public.wb_geocheck_zint_victim_assistance_valid_polys as
-	select guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.wb_geocheck_zint_victim_assistance_polys where ST_IsValid(shape) = 't';
+	select fieldreport_guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.wb_geocheck_zint_victim_assistance_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid single-part polygons within that view (extracts valid polygons only)
 drop view if exists public.wb_geocheck_zint_victim_assistance_valid_singlepart_polys CASCADE;
 create view public.wb_geocheck_zint_victim_assistance_valid_singlepart_polys as
 	select
-	guid,
+	fieldreport_guid,
 	localid,
 	st_removerepeatedpoints(shape) as shape,
 	substr(st_asewkt(st_exteriorring(st_removerepeatedpoints(shape))),11) as wkt,
 	st_summary(st_removerepeatedpoints(shape)) as summary
 	from public.wb_geocheck_zint_victim_assistance_polys
 	where ST_IsValid(shape) = 't'
-		and guid in
+		and fieldreport_guid in
 			(select
-			guid 
+			fieldreport_guid 
 			from public.wb_geocheck_zint_victim_assistance_pts 
 			where shapeenum = 'Polygon' 
-			group by guid 
+			group by fieldreport_guid 
 			having count(distinct(geospatialinfo_guid)) = 1 
 			order by 1);
 			
@@ -928,19 +921,19 @@ create view public.wb_geocheck_zint_victim_assistance_valid_singlepart_polys as
 drop view if exists public.wb_geocheck_zint_victim_assistance_valid_multipart_polys CASCADE;
 create view public.wb_geocheck_zint_victim_assistance_valid_multipart_polys as
 	select
-	guid,
+	fieldreport_guid,
 	localid,
 	st_collect(st_removerepeatedpoints(shape)) as shape,
 	substr(st_asewkt(st_collect(st_exteriorring(st_removerepeatedpoints(shape)))),11) as wkt,
 	st_summary(st_collect(st_removerepeatedpoints(shape))) as summary
 	from public.wb_geocheck_zint_victim_assistance_valid_polys 
-	group by guid, localid
-	having guid in
+	group by fieldreport_guid, localid
+	having fieldreport_guid in
 		(select
-		guid 
+		fieldreport_guid 
 		from public.wb_geocheck_zint_victim_assistance_pts 
 		where shapeenum = 'Polygon' 
-		group by guid 
+		group by fieldreport_guid 
 		having count(distinct(geospatialinfo_guid)) > 1 
 		order by 1);
 		
@@ -954,7 +947,7 @@ create view public.wb_geocheck_zint_victim_assistance_all_object_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.wb_geocheck_obj_victim_assistance_invalid_polys CASCADE;
 create view public.wb_geocheck_obj_victim_assistance_invalid_polys as
-	select fieldreport_localid, guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.wb_geocheck_zint_victim_assistance_polys where ST_IsValid(shape) = 'f';
+	select fieldreport_localid, fieldreport_guid, localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.wb_geocheck_zint_victim_assistance_polys where ST_IsValid(shape) = 'f';
 	
 
 -------------------------------
@@ -968,9 +961,8 @@ create or replace view public.wb_geocheck_zint_location_pts as
 
 	select
 	fieldreport.fieldreport_localid,
-	locationinfoversion.location_guid,
+	fieldreport.fieldreport_guid,
 	locationinfoversion.location_localid,
-	locationinfoversion.fieldreport_guid,
 	locationinfoversion_has_geospatialinfo.geospatialinfo_guid,
 	ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 	geospatialinfo.shape_id,
@@ -1016,48 +1008,48 @@ create or replace view public.wb_geocheck_zint_location_pts as
 -- This view can be materialized in PostgreSQL 9.3+
 drop view if exists public.wb_geocheck_zint_location_polys CASCADE;
 create or replace view public.wb_geocheck_zint_location_polys as
-	select fieldreport_localid, location_guid, location_localid, shape_id,
+	select fieldreport_localid, fieldreport_guid, location_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
 		count(*) as pointcount
-	from (select fieldreport_localid, location_guid, location_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
+	from (select fieldreport_localid, fieldreport_guid, location_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.wb_geocheck_zint_location_pts where shapeenum = 'Polygon' 
-		order by location_guid, location_localid, shape_id, geospatialinfo_guid, pointno) as values 
-	group by fieldreport_localid, location_guid, location_localid, shape_id, geospatialinfo_guid having count(*) > 2
-	order by location_guid;
+		order by fieldreport_guid, location_localid, shape_id, geospatialinfo_guid, pointno) as values 
+	group by fieldreport_localid, fieldreport_guid, location_localid, shape_id, geospatialinfo_guid having count(*) > 2
+	order by fieldreport_guid;
 						
 -- create view to list only low-vertex polygons
 drop view if exists public.wb_geocheck_obj_location_few_vertices_polys CASCADE;
 create or replace view public.wb_geocheck_obj_location_few_vertices_polys as
-	select location_guid, location_localid, shape_id, count(*) as pointcount
-	from (select location_guid, location_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
+	select fieldreport_guid, location_localid, shape_id, count(*) as pointcount
+	from (select fieldreport_guid, location_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.wb_geocheck_zint_location_pts where shapeenum = 'Polygon' 
-		order by location_guid, location_localid, shape_id, geospatialinfo_guid, pointno) as values 
-	group by location_guid, location_localid, shape_id, geospatialinfo_guid having count(*) < 3
-	order by location_guid;
+		order by fieldreport_guid, location_localid, shape_id, geospatialinfo_guid, pointno) as values 
+	group by fieldreport_guid, location_localid, shape_id, geospatialinfo_guid having count(*) < 3
+	order by fieldreport_guid;
 
 -- Create a subsidiary view of all valid polygons within that view (extracts valid polygons only)
 drop view if exists public.wb_geocheck_zint_location_valid_polys CASCADE;
 create view public.wb_geocheck_zint_location_valid_polys as
-	select location_guid, location_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.wb_geocheck_zint_location_polys where ST_IsValid(shape) = 't';
+	select fieldreport_guid, location_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_summary(shape) from public.wb_geocheck_zint_location_polys where ST_IsValid(shape) = 't';
 
 -- Create a subsidiary view of all valid single-part polygons within that view (extracts valid polygons only)
 drop view if exists public.wb_geocheck_zint_location_valid_singlepart_polys CASCADE;
 create view public.wb_geocheck_zint_location_valid_singlepart_polys as
 	select
-	location_guid,
+	fieldreport_guid,
 	location_localid,
 	st_removerepeatedpoints(shape) as shape,
 	substr(st_asewkt(st_exteriorring(st_removerepeatedpoints(shape))),11) as wkt,
 	st_summary(st_removerepeatedpoints(shape)) as summary
 	from public.wb_geocheck_zint_location_polys
 	where ST_IsValid(shape) = 't'
-		and location_guid in
+		and fieldreport_guid in
 			(select
-			location_guid 
+			fieldreport_guid 
 			from public.wb_geocheck_zint_location_pts 
 			where shapeenum = 'Polygon' 
-			group by location_guid 
+			group by fieldreport_guid 
 			having count(distinct(geospatialinfo_guid)) = 1 
 			order by 1);
 	
@@ -1065,19 +1057,19 @@ create view public.wb_geocheck_zint_location_valid_singlepart_polys as
 drop view if exists public.wb_geocheck_zint_location_valid_multipart_polys CASCADE;
 create view public.wb_geocheck_zint_location_valid_multipart_polys as
 	select
-	location_guid,
+	fieldreport_guid,
 	location_localid,
 	st_collect(st_removerepeatedpoints(shape)) as shape,
 	substr(st_asewkt(st_collect(st_exteriorring(st_removerepeatedpoints(shape)))),11) as wkt,
 	st_summary(st_collect(st_removerepeatedpoints(shape))) as summary
 	from public.wb_geocheck_zint_location_valid_polys 
-	group by location_guid, location_localid
-	having location_guid in
+	group by fieldreport_guid, location_localid
+	having fieldreport_guid in
 		(select
-		location_guid 
+		fieldreport_guid 
 		from public.wb_geocheck_zint_location_pts 
 		where shapeenum = 'Polygon' 
-		group by location_guid 
+		group by fieldreport_guid 
 		having count(distinct(geospatialinfo_guid)) > 1 
 		order by 1);
 		
@@ -1091,7 +1083,7 @@ create view public.wb_geocheck_zint_location_all_object_polys as
 -- Create a subsidiary view of all Invalid polygons within that view (extracts invalid polygons)
 drop view if exists public.wb_geocheck_obj_location_invalid_polys CASCADE;
 create view public.wb_geocheck_obj_location_invalid_polys as
-	select fieldreport_localid, location_guid, location_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.wb_geocheck_zint_location_polys where ST_IsValid(shape) = 'f';
+	select fieldreport_localid, fieldreport_guid, location_localid, shape_id, shape, substr(st_asewkt(st_exteriorring(shape)),11) as wkt, st_isvalidreason(shape), st_summary(shape) from public.wb_geocheck_zint_location_polys where ST_IsValid(shape) = 'f';
 
 
 -------------------------------
@@ -1260,7 +1252,7 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid as
 	(select
 		'HAZARD' as object_type,
 		fieldreport.fieldreport_localid,
-		hazardinfoversion.hazard_guid,
+		fieldreport.fieldreport_guid,
 		hazardinfoversion.hazard_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
@@ -1272,14 +1264,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, hazardinfoversion.hazard_guid, hazardinfoversion.hazard_localid, geospatialinfo.shape_id, ime01.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, hazardinfoversion.hazard_localid, geospatialinfo.shape_id, ime01.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'HAZARD REDUCTION' as object_type,
 		fieldreport.fieldreport_localid,
-		hazreducinfoversion.hazreduc_guid,
+		fieldreport.fieldreport_guid,
 		hazreducinfoversion.hazreduc_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
@@ -1291,14 +1283,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, hazreducinfoversion.hazreduc_guid, hazreducinfoversion.hazreduc_localid, geospatialinfo.shape_id, ime01.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, hazreducinfoversion.hazreduc_localid, geospatialinfo.shape_id, ime01.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'ACCIDENT' as object_type,
 		fieldreport.fieldreport_localid,
-		accidentinfoversion.accident_guid,
+		fieldreport.fieldreport_guid,
 		accidentinfoversion.accident_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
@@ -1310,14 +1302,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, accidentinfoversion.accident_guid, accidentinfoversion.accident_localid, geospatialinfo.shape_id, ime01.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, accidentinfoversion.accident_localid, geospatialinfo.shape_id, ime01.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'MRE' as object_type,
 		fieldreport.fieldreport_localid,
-		mreinfoversion.mre_guid,
+		fieldreport.fieldreport_guid,
 		mreinfoversion.mre_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
@@ -1329,14 +1321,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, mreinfoversion.mre_guid, mreinfoversion.mre_localid, geospatialinfo.shape_id, ime01.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, mreinfoversion.mre_localid, geospatialinfo.shape_id, ime01.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'QA' as object_type,
 		fieldreport.fieldreport_localid,
-		qainfoversion.qa_guid,
+		fieldreport.fieldreport_guid,
 		qainfoversion.qa_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
@@ -1348,14 +1340,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, qainfoversion.qa_guid, qainfoversion.qa_localid, geospatialinfo.shape_id, ime01.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, qainfoversion.qa_localid, geospatialinfo.shape_id, ime01.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM' as object_type,
 		fieldreport.fieldreport_localid,
-		victiminfoversion.victim_guid,
+		fieldreport.fieldreport_guid,
 		victiminfoversion.victim_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
@@ -1367,14 +1359,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, victiminfoversion.victim_guid, victiminfoversion.victim_localid, geospatialinfo.shape_id, ime01.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, victiminfoversion.victim_localid, geospatialinfo.shape_id, ime01.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'LOCATION' as object_type,
 		fieldreport.fieldreport_localid,
-		locationinfoversion.location_guid,
+		fieldreport.fieldreport_guid,
 		locationinfoversion.location_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
@@ -1386,14 +1378,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, locationinfoversion.location_guid, locationinfoversion.location_localid, geospatialinfo.shape_id, ime01.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, locationinfoversion.location_localid, geospatialinfo.shape_id, ime01.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
 		fieldreport.fieldreport_localid,
-		victim_assistance_version.guid,
+		fieldreport.fieldreport_guid,
 		victim_assistance_version.localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
@@ -1405,7 +1397,7 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, victim_assistance_version.guid, victim_assistance_version.localid, geospatialinfo.shape_id, ime01.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, victim_assistance_version.localid, geospatialinfo.shape_id, ime01.enumvalue
 	having count(*) > 1
 	order by 3)
 	order by 1,3;
@@ -1420,7 +1412,7 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid_trimmed as
 	(select
 		'HAZARD' as object_type,
 		fieldreport.fieldreport_localid,
-		hazardinfoversion.hazard_guid,
+		fieldreport.fieldreport_guid,
 		hazardinfoversion.hazard_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
@@ -1432,14 +1424,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid_trimmed as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, hazardinfoversion.hazard_guid, hazardinfoversion.hazard_localid, trim(geospatialinfo.shape_id), ime01.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, hazardinfoversion.hazard_localid, trim(geospatialinfo.shape_id), ime01.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'HAZARD REDUCTION' as object_type,
 		fieldreport.fieldreport_localid,
-		hazreducinfoversion.hazreduc_guid,
+		fieldreport.fieldreport_guid,
 		hazreducinfoversion.hazreduc_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
@@ -1451,14 +1443,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid_trimmed as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, hazreducinfoversion.hazreduc_guid, hazreducinfoversion.hazreduc_localid, trim(geospatialinfo.shape_id), ime01.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, hazreducinfoversion.hazreduc_localid, trim(geospatialinfo.shape_id), ime01.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'ACCIDENT' as object_type,
 		fieldreport.fieldreport_localid,
-		accidentinfoversion.accident_guid,
+		fieldreport.fieldreport_guid,
 		accidentinfoversion.accident_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
@@ -1470,14 +1462,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid_trimmed as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, accidentinfoversion.accident_guid, accidentinfoversion.accident_localid, trim(geospatialinfo.shape_id), ime01.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, accidentinfoversion.accident_localid, trim(geospatialinfo.shape_id), ime01.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'MRE' as object_type,
 		fieldreport.fieldreport_localid,
-		mreinfoversion.mre_guid,
+		fieldreport.fieldreport_guid,
 		mreinfoversion.mre_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
@@ -1489,14 +1481,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid_trimmed as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, mreinfoversion.mre_guid, mreinfoversion.mre_localid, trim(geospatialinfo.shape_id), ime01.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, mreinfoversion.mre_localid, trim(geospatialinfo.shape_id), ime01.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'QA' as object_type,
 		fieldreport.fieldreport_localid,
-		qainfoversion.qa_guid,
+		fieldreport.fieldreport_guid,
 		qainfoversion.qa_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
@@ -1508,14 +1500,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid_trimmed as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, qainfoversion.qa_guid, qainfoversion.qa_localid, trim(geospatialinfo.shape_id), ime01.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, qainfoversion.qa_localid, trim(geospatialinfo.shape_id), ime01.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM' as object_type,
 		fieldreport.fieldreport_localid,
-		victiminfoversion.victim_guid,
+		fieldreport.fieldreport_guid,
 		victiminfoversion.victim_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
@@ -1527,14 +1519,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid_trimmed as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, victiminfoversion.victim_guid, victiminfoversion.victim_localid, trim(geospatialinfo.shape_id), ime01.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, victiminfoversion.victim_localid, trim(geospatialinfo.shape_id), ime01.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'LOCATION' as object_type,
 		fieldreport.fieldreport_localid,
-		locationinfoversion.location_guid,
+		fieldreport.fieldreport_guid,
 		locationinfoversion.location_localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
@@ -1546,14 +1538,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid_trimmed as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, locationinfoversion.location_guid, locationinfoversion.location_localid, trim(geospatialinfo.shape_id), ime01.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, locationinfoversion.location_localid, trim(geospatialinfo.shape_id), ime01.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
 		fieldreport.fieldreport_localid,
-		victim_assistance_version.guid,
+		fieldreport.fieldreport_guid,
 		victim_assistance_version.localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
@@ -1565,7 +1557,7 @@ create or replace view public.wb_geocheck_duplicate_polygon_polyid_trimmed as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, victim_assistance_version.guid, victim_assistance_version.localid, trim(geospatialinfo.shape_id), ime01.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, victim_assistance_version.localid, trim(geospatialinfo.shape_id), ime01.enumvalue
 	having count(*) > 1
 	order by 3)
 	order by 1,3;
@@ -1580,7 +1572,7 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid as
 	(select
 		'HAZARD' as object_type,
 		fieldreport.fieldreport_localid,
-		hazardinfoversion.hazard_guid,
+		fieldreport.fieldreport_guid,
 		hazardinfoversion.hazard_localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -1594,14 +1586,14 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid as
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, hazardinfoversion.hazard_guid, hazardinfoversion.hazard_localid, geopoint.pointlocal_id, ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, hazardinfoversion.hazard_localid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'HAZARD REDUCTION' as object_type,
 		fieldreport.fieldreport_localid,
-		hazreducinfoversion.hazreduc_guid,
+		fieldreport.fieldreport_guid,
 		hazreducinfoversion.hazreduc_localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -1615,14 +1607,14 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid as
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, hazreducinfoversion.hazreduc_guid, hazreducinfoversion.hazreduc_localid, geopoint.pointlocal_id, ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, hazreducinfoversion.hazreduc_localid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'ACCIDENT' as object_type,
 		fieldreport.fieldreport_localid,
-		accidentinfoversion.accident_guid,
+		fieldreport.fieldreport_guid,
 		accidentinfoversion.accident_localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -1636,14 +1628,14 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid as
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, accidentinfoversion.accident_guid, accidentinfoversion.accident_localid, geopoint.pointlocal_id, ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, accidentinfoversion.accident_localid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'MRE' as object_type,
 		fieldreport.fieldreport_localid,
-		mreinfoversion.mre_guid,
+		fieldreport.fieldreport_guid,
 		mreinfoversion.mre_localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -1657,14 +1649,14 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid as
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, mreinfoversion.mre_guid, mreinfoversion.mre_localid, geopoint.pointlocal_id, ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, mreinfoversion.mre_localid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'QA' as object_type,
 		fieldreport.fieldreport_localid,
-		qainfoversion.qa_guid,
+		fieldreport.fieldreport_guid,
 		qainfoversion.qa_localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -1678,14 +1670,14 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid as
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, qainfoversion.qa_guid, qainfoversion.qa_localid, geopoint.pointlocal_id, ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, qainfoversion.qa_localid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM' as object_type,
 		fieldreport.fieldreport_localid,
-		victiminfoversion.victim_guid,
+		fieldreport.fieldreport_guid,
 		victiminfoversion.victim_localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -1699,14 +1691,14 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid as
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, victiminfoversion.victim_guid, victiminfoversion.victim_localid, geopoint.pointlocal_id, ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, victiminfoversion.victim_localid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'LOCATION' as object_type,
 		fieldreport.fieldreport_localid,
-		locationinfoversion.location_guid,
+		fieldreport.fieldreport_guid,
 		locationinfoversion.location_localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -1720,14 +1712,14 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid as
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, locationinfoversion.location_guid, locationinfoversion.location_localid, geopoint.pointlocal_id, ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, locationinfoversion.location_localid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
 		fieldreport.fieldreport_localid,
-		victim_assistance_version.guid,
+		fieldreport.fieldreport_guid,
 		victim_assistance_version.localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -1741,7 +1733,7 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid as
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, victim_assistance_version.guid, victim_assistance_version.localid, geopoint.pointlocal_id, ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, victim_assistance_version.localid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	order by 1,3;
@@ -1756,7 +1748,7 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid_trimmed 
 	(select
 		'HAZARD' as object_type,
 		fieldreport.fieldreport_localid,
-		hazardinfoversion.hazard_guid,
+		fieldreport.fieldreport_guid,
 		hazardinfoversion.hazard_localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -1770,14 +1762,14 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid_trimmed 
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, hazardinfoversion.hazard_guid, hazardinfoversion.hazard_localid, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, hazardinfoversion.hazard_localid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'HAZARD REDUCTION' as object_type,
 		fieldreport.fieldreport_localid,
-		hazreducinfoversion.hazreduc_guid,
+		fieldreport.fieldreport_guid,
 		hazreducinfoversion.hazreduc_localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -1791,14 +1783,14 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid_trimmed 
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, hazreducinfoversion.hazreduc_guid, hazreducinfoversion.hazreduc_localid, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, hazreducinfoversion.hazreduc_localid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'ACCIDENT' as object_type,
 		fieldreport.fieldreport_localid,
-		accidentinfoversion.accident_guid,
+		fieldreport.fieldreport_guid,
 		accidentinfoversion.accident_localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -1812,14 +1804,14 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid_trimmed 
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, accidentinfoversion.accident_guid, accidentinfoversion.accident_localid, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, accidentinfoversion.accident_localid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'MRE' as object_type,
 		fieldreport.fieldreport_localid,
-		mreinfoversion.mre_guid,
+		fieldreport.fieldreport_guid,
 		mreinfoversion.mre_localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -1833,14 +1825,14 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid_trimmed 
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, mreinfoversion.mre_guid, mreinfoversion.mre_localid, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, mreinfoversion.mre_localid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'QA' as object_type,
 		fieldreport.fieldreport_localid,
-		qainfoversion.qa_guid,
+		fieldreport.fieldreport_guid,
 		qainfoversion.qa_localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -1854,14 +1846,14 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid_trimmed 
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, qainfoversion.qa_guid, qainfoversion.qa_localid, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, qainfoversion.qa_localid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM' as object_type,
 		fieldreport.fieldreport_localid,
-		victiminfoversion.victim_guid,
+		fieldreport.fieldreport_guid,
 		victiminfoversion.victim_localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -1875,14 +1867,14 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid_trimmed 
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, victiminfoversion.victim_guid, victiminfoversion.victim_localid, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, victiminfoversion.victim_localid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'LOCATION' as object_type,
 		fieldreport.fieldreport_localid,
-		locationinfoversion.location_guid,
+		fieldreport.fieldreport_guid,
 		locationinfoversion.location_localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -1896,14 +1888,14 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid_trimmed 
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, locationinfoversion.location_guid, locationinfoversion.location_localid, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, locationinfoversion.location_localid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
 		fieldreport.fieldreport_localid,
-		victim_assistance_version.guid,
+		fieldreport.fieldreport_guid,
 		victim_assistance_version.localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -1917,7 +1909,7 @@ create or replace view public.wb_geocheck_duplicate_point_point_localid_trimmed 
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, victim_assistance_version.guid, victim_assistance_version.localid, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, victim_assistance_version.localid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	order by 1,3;
@@ -1932,7 +1924,7 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid as
 	(select
 		'HAZARD' as object_type,
 		fieldreport.fieldreport_localid,
-		hazardinfoversion.hazard_guid,
+		fieldreport.fieldreport_guid,
 		hazardinfoversion.hazard_localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
@@ -1947,14 +1939,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, hazardinfoversion.hazard_guid, hazardinfoversion.hazard_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, hazardinfoversion.hazard_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'HAZARD REDUCTION' as object_type,
 		fieldreport.fieldreport_localid,
-		hazreducinfoversion.hazreduc_guid,
+		fieldreport.fieldreport_guid,
 		hazreducinfoversion.hazreduc_localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
@@ -1969,14 +1961,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, hazreducinfoversion.hazreduc_guid, hazreducinfoversion.hazreduc_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, hazreducinfoversion.hazreduc_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'ACCIDENT' as object_type,
 		fieldreport.fieldreport_localid,
-		accidentinfoversion.accident_guid,
+		fieldreport.fieldreport_guid,
 		accidentinfoversion.accident_localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
@@ -1991,14 +1983,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, accidentinfoversion.accident_guid, accidentinfoversion.accident_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, accidentinfoversion.accident_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'MRE' as object_type,
 		fieldreport.fieldreport_localid,
-		mreinfoversion.mre_guid,
+		fieldreport.fieldreport_guid,
 		mreinfoversion.mre_localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
@@ -2013,14 +2005,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, mreinfoversion.mre_guid, mreinfoversion.mre_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, mreinfoversion.mre_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'QA' as object_type,
 		fieldreport.fieldreport_localid,
-		qainfoversion.qa_guid,
+		fieldreport.fieldreport_guid,
 		qainfoversion.qa_localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
@@ -2035,14 +2027,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, qainfoversion.qa_guid, qainfoversion.qa_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, qainfoversion.qa_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM' as object_type,
 		fieldreport.fieldreport_localid,
-		victiminfoversion.victim_guid,
+		fieldreport.fieldreport_guid,
 		victiminfoversion.victim_localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
@@ -2057,14 +2049,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, victiminfoversion.victim_guid, victiminfoversion.victim_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, victiminfoversion.victim_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'LOCATION' as object_type,
 		fieldreport.fieldreport_localid,
-		locationinfoversion.location_guid,
+		fieldreport.fieldreport_guid,
 		locationinfoversion.location_localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
@@ -2079,14 +2071,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, locationinfoversion.location_guid, locationinfoversion.location_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, locationinfoversion.location_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
 		fieldreport.fieldreport_localid,
-		victim_assistance_version.guid,
+		fieldreport.fieldreport_guid,
 		victim_assistance_version.localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
@@ -2101,7 +2093,7 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, victim_assistance_version.guid, victim_assistance_version.localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, victim_assistance_version.localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	order by 1,3;
@@ -2116,7 +2108,7 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid_trimme
 	(select
 		'HAZARD' as object_type,
 		fieldreport.fieldreport_localid,
-		hazardinfoversion.hazard_guid,
+		fieldreport.fieldreport_guid,
 		hazardinfoversion.hazard_localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
@@ -2131,14 +2123,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid_trimme
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, hazardinfoversion.hazard_guid, hazardinfoversion.hazard_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, hazardinfoversion.hazard_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'HAZARD REDUCTION' as object_type,
 		fieldreport.fieldreport_localid,
-		hazreducinfoversion.hazreduc_guid,
+		fieldreport.fieldreport_guid,
 		hazreducinfoversion.hazreduc_localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
@@ -2153,14 +2145,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid_trimme
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, hazreducinfoversion.hazreduc_guid, hazreducinfoversion.hazreduc_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, hazreducinfoversion.hazreduc_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'ACCIDENT' as object_type,
 		fieldreport.fieldreport_localid,
-		accidentinfoversion.accident_guid,
+		fieldreport.fieldreport_guid,
 		accidentinfoversion.accident_localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
@@ -2175,14 +2167,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid_trimme
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, accidentinfoversion.accident_guid, accidentinfoversion.accident_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, accidentinfoversion.accident_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'MRE' as object_type,
 		fieldreport.fieldreport_localid,
-		mreinfoversion.mre_guid,
+		fieldreport.fieldreport_guid,
 		mreinfoversion.mre_localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
@@ -2197,14 +2189,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid_trimme
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, mreinfoversion.mre_guid, mreinfoversion.mre_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, mreinfoversion.mre_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'QA' as object_type,
 		fieldreport.fieldreport_localid,
-		qainfoversion.qa_guid,
+		fieldreport.fieldreport_guid,
 		qainfoversion.qa_localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
@@ -2219,14 +2211,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid_trimme
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, qainfoversion.qa_guid, qainfoversion.qa_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, qainfoversion.qa_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM' as object_type,
 		fieldreport.fieldreport_localid,
-		victiminfoversion.victim_guid,
+		fieldreport.fieldreport_guid,
 		victiminfoversion.victim_localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
@@ -2241,14 +2233,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid_trimme
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, victiminfoversion.victim_guid, victiminfoversion.victim_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, victiminfoversion.victim_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'LOCATION' as object_type,
 		fieldreport.fieldreport_localid,
-		locationinfoversion.location_guid,
+		fieldreport.fieldreport_guid,
 		locationinfoversion.location_localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
@@ -2263,14 +2255,14 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid_trimme
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, locationinfoversion.location_guid, locationinfoversion.location_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, locationinfoversion.location_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
 		fieldreport.fieldreport_localid,
-		victim_assistance_version.guid,
+		fieldreport.fieldreport_guid,
 		victim_assistance_version.localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
@@ -2285,7 +2277,7 @@ create or replace view public.wb_geocheck_duplicate_polygon_point_localid_trimme
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where (ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline')
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, victim_assistance_version.guid, victim_assistance_version.localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, victim_assistance_version.localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	order by 1,3;
@@ -2300,88 +2292,88 @@ create or replace view public.wb_geocheck_duplicate_polygons as
 	(select
 		'HAZARD' as object_type,
 		fieldreport_localid, 
-		hazard_guid,
+		fieldreport_guid,
 		hazard_localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from wb_geocheck_zint_hazard_polys
-	group by fieldreport_localid, hazard_guid, hazard_localid, shape
+	group by fieldreport_localid, fieldreport_guid, hazard_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'HAZARD REDUCTION' as object_type,
 		fieldreport_localid,
-		hazreduc_guid,
+		fieldreport_guid,
 		hazreduc_localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from wb_geocheck_zint_hazreduc_polys
-	group by fieldreport_localid, hazreduc_guid, hazreduc_localid, shape
+	group by fieldreport_localid, fieldreport_guid, hazreduc_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'ACCIDENT' as object_type,
 		fieldreport_localid,
-		accident_guid,
+		fieldreport_guid,
 		accident_localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from wb_geocheck_zint_accident_polys
-	group by fieldreport_localid, accident_guid, accident_localid, shape
+	group by fieldreport_localid, fieldreport_guid, accident_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'MRE' as object_type,
 		fieldreport_localid,
-		mre_guid,
+		fieldreport_guid,
 		mre_localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from wb_geocheck_zint_mre_polys
-	group by fieldreport_localid, mre_guid, mre_localid, shape
+	group by fieldreport_localid, fieldreport_guid, mre_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'QA' as object_type,
 		fieldreport_localid,
-		qa_guid,
+		fieldreport_guid,
 		qa_localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from wb_geocheck_zint_qa_polys
-	group by fieldreport_localid, qa_guid, qa_localid, shape
+	group by fieldreport_localid, fieldreport_guid, qa_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM' as object_type,
 		fieldreport_localid,
-		victim_guid,
+		fieldreport_guid,
 		victim_localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from wb_geocheck_zint_victim_polys
-	group by fieldreport_localid, victim_guid, victim_localid, shape
+	group by fieldreport_localid, fieldreport_guid, victim_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'LOCATION' as object_type,
 		fieldreport_localid,
-		location_guid,
+		fieldreport_guid,
 		location_localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from wb_geocheck_zint_location_polys
-	group by fieldreport_localid, location_guid, location_localid, shape
+	group by fieldreport_localid, fieldreport_guid, location_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
 		fieldreport_localid,
-		guid,
+		fieldreport_guid,
 		localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from wb_geocheck_zint_victim_assistance_polys
-	group by fieldreport_localid, guid, localid, shape
+	group by fieldreport_localid, fieldreport_guid, localid, shape
 	having count(*) > 1
 	order by 3)
 	order by 1, 3;
@@ -2395,104 +2387,104 @@ create or replace view public.wb_geocheck_duplicate_polygon_points as
 	(select
 		'HAZARD' as object_type,
 		fieldreport_localid, 
-		hazard_guid,
+		fieldreport_guid,
 		hazard_localid,
 		shape_id,
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
 	from wb_geocheck_zint_hazard_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by fieldreport_localid, hazard_guid, hazard_localid, shape_id, shape
+	group by fieldreport_localid, fieldreport_guid, hazard_localid, shape_id, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(	select
 		'HAZARD REDUCTION' as object_type,
 		fieldreport_localid,
-		hazreduc_guid,
+		fieldreport_guid,
 		hazreduc_localid,
 		shape_id,
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
 	from wb_geocheck_zint_hazreduc_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by fieldreport_localid, hazreduc_guid, hazreduc_localid, shape_id, shape
+	group by fieldreport_localid, fieldreport_guid, hazreduc_localid, shape_id, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(select
 		'ACCIDENT' as object_type,
 		fieldreport_localid,
-		accident_guid,
+		fieldreport_guid,
 		accident_localid,
 		shape_id,
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
 	from wb_geocheck_zint_accident_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by fieldreport_localid, accident_guid, accident_localid, shape_id, shape
+	group by fieldreport_localid, fieldreport_guid, accident_localid, shape_id, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(select
 		'MRE' as object_type,
 		fieldreport_localid,
-		mre_guid,
+		fieldreport_guid,
 		mre_localid,
 		shape_id,
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
 	from wb_geocheck_zint_mre_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by fieldreport_localid, mre_guid, mre_localid, shape_id, shape
+	group by fieldreport_localid, fieldreport_guid, mre_localid, shape_id, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(select
 		'QA' as object_type,
 		fieldreport_localid,
-		qa_guid,
+		fieldreport_guid,
 		qa_localid,
 		shape_id,
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
 	from wb_geocheck_zint_qa_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by fieldreport_localid, qa_guid, qa_localid, shape_id, shape
+	group by fieldreport_localid, fieldreport_guid, qa_localid, shape_id, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(select
 		'VICTIM' as object_type,
 		fieldreport_localid,
-		victim_guid,
+		fieldreport_guid,
 		victim_localid,
 		shape_id,
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
 	from wb_geocheck_zint_victim_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by fieldreport_localid, victim_guid, victim_localid, shape_id, shape
+	group by fieldreport_localid, fieldreport_guid, victim_localid, shape_id, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(select
 		'LOCATION' as object_type,
 		fieldreport_localid,
-		location_guid,
+		fieldreport_guid,
 		location_localid,
 		shape_id,
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
 	from wb_geocheck_zint_location_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by fieldreport_localid, location_guid, location_localid, shape_id, shape
+	group by fieldreport_localid, fieldreport_guid, location_localid, shape_id, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
 		fieldreport_localid,
-		guid,
+		fieldreport_guid,
 		localid,
 		shape_id,
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
 	from wb_geocheck_zint_victim_assistance_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by fieldreport_localid, guid, localid, shape_id, shape
+	group by fieldreport_localid, fieldreport_guid, localid, shape_id, shape
 	having count(*) > 1
 	order by 3,4)
 	order by 1, 3;
@@ -2506,7 +2498,7 @@ create or replace view public.wb_geocheck_duplicate_points as
 	(select
 		'HAZARD' as object_type,
 		fieldreport.fieldreport_localid,
-		hazardinfoversion.hazard_guid,
+		fieldreport.fieldreport_guid,
 		hazardinfoversion.hazard_localid,
 		string_agg(pointlocal_id,', ') as dup_point_ids
 	from wb_geocheck_zint_hazard_pts
@@ -2517,14 +2509,14 @@ create or replace view public.wb_geocheck_duplicate_points as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, hazardinfoversion.hazard_guid, hazardinfoversion.hazard_localid, shape
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, hazardinfoversion.hazard_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'HAZARD REDUCTION' as object_type,
 		fieldreport.fieldreport_localid,
-		hazreducinfoversion.hazreduc_guid,
+		fieldreport.fieldreport_guid,
 		hazreducinfoversion.hazreduc_localid,
 		string_agg(pointlocal_id,', ') as dup_point_ids
 	from wb_geocheck_zint_hazreduc_pts
@@ -2535,14 +2527,14 @@ create or replace view public.wb_geocheck_duplicate_points as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, hazreducinfoversion.hazreduc_guid, hazreducinfoversion.hazreduc_localid, shape
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, hazreducinfoversion.hazreduc_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'ACCIDENT' as object_type,
 		fieldreport.fieldreport_localid,
-		accidentinfoversion.accident_guid,
+		fieldreport.fieldreport_guid,
 		accidentinfoversion.accident_localid,
 		string_agg(pointlocal_id,', ') as dup_point_ids
 	from wb_geocheck_zint_accident_pts
@@ -2553,14 +2545,14 @@ create or replace view public.wb_geocheck_duplicate_points as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, accidentinfoversion.accident_guid, accidentinfoversion.accident_localid, shape
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, accidentinfoversion.accident_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'MRE' as object_type,
 		fieldreport.fieldreport_localid,
-		mreinfoversion.mre_guid,
+		fieldreport.fieldreport_guid,
 		mreinfoversion.mre_localid,
 		string_agg(pointlocal_id,', ') as dup_point_ids
 	from wb_geocheck_zint_mre_pts
@@ -2571,14 +2563,14 @@ create or replace view public.wb_geocheck_duplicate_points as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, mreinfoversion.mre_guid, mreinfoversion.mre_localid, shape
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, mreinfoversion.mre_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'QA' as object_type,
 		fieldreport.fieldreport_localid,
-		qainfoversion.qa_guid,
+		fieldreport.fieldreport_guid,
 		qainfoversion.qa_localid,
 		string_agg(pointlocal_id,', ') as dup_point_ids
 	from wb_geocheck_zint_qa_pts
@@ -2589,14 +2581,14 @@ create or replace view public.wb_geocheck_duplicate_points as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, qainfoversion.qa_guid, qainfoversion.qa_localid, shape
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, qainfoversion.qa_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM' as object_type,
 		fieldreport.fieldreport_localid,
-		victiminfoversion.victim_guid,
+		fieldreport.fieldreport_guid,
 		victiminfoversion.victim_localid,
 		string_agg(pointlocal_id,', ') as dup_point_ids
 	from wb_geocheck_zint_victim_pts
@@ -2607,14 +2599,14 @@ create or replace view public.wb_geocheck_duplicate_points as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, victiminfoversion.victim_guid, victiminfoversion.victim_localid, shape
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, victiminfoversion.victim_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'LOCATION' as object_type,
 		fieldreport.fieldreport_localid,
-		locationinfoversion.location_guid,
+		fieldreport.fieldreport_guid,
 		locationinfoversion.location_localid,
 		string_agg(pointlocal_id,', ') as dup_point_ids
 	from wb_geocheck_zint_location_pts
@@ -2625,14 +2617,14 @@ create or replace view public.wb_geocheck_duplicate_points as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, locationinfoversion.location_guid, locationinfoversion.location_localid, shape
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, locationinfoversion.location_localid, shape
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
 		fieldreport.fieldreport_localid,
-		victim_assistance_version.guid,
+		fieldreport.fieldreport_guid,
 		victim_assistance_version.localid,
 		string_agg(pointlocal_id,', ') as dup_point_ids
 	from wb_geocheck_zint_victim_assistance_pts
@@ -2643,7 +2635,7 @@ create or replace view public.wb_geocheck_duplicate_points as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 	where ime01.enumvalue != 'Polygon' and ime01.enumvalue != 'Polyline'
 	and fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
-	group by fieldreport.fieldreport_localid, victim_assistance_version.guid, victim_assistance_version.localid, shape
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, victim_assistance_version.localid, shape
 	having count(*) > 1
 	order by 3)
 	order by 1,3;

@@ -1805,8 +1805,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 
 	(select
 		'HAZARD' as object_type,
-		hazard.hazard_guid,
-		hazard.hazard_localid,
+		hazard.hazard_guid as guid,
+		hazard.hazard_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
 		count(*)
@@ -1821,8 +1821,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	union
 	(select
 		'HAZARD REDUCTION' as object_type,
-		hazreduc.hazreduc_guid,
-		hazreduc.hazreduc_localid,
+		hazreduc.hazreduc_guid as guid,
+		hazreduc.hazreduc_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
 		count(*)
@@ -1837,8 +1837,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	union
 	(select
 		'ACCIDENT' as object_type,
-		accident.accident_guid,
-		accident.accident_localid,
+		accident.accident_guid as guid,
+		accident.accident_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
 		count(*)
@@ -1853,8 +1853,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	union
 	(select
 		'MRE' as object_type,
-		mre.mre_guid,
-		mre.mre_localid,
+		mre.mre_guid as guid,
+		mre.mre_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
 		count(*)
@@ -1869,8 +1869,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	union
 	(select
 		'QA' as object_type,
-		qa.qa_guid,
-		qa.qa_localid,
+		qa.qa_guid as guid,
+		qa.qa_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
 		count(*)
@@ -1885,8 +1885,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	union
 	(select
 		'VICTIM' as object_type,
-		victim.victim_guid,
-		victim.victim_localid,
+		victim.victim_guid as guid,
+		victim.victim_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
 		count(*)
@@ -1901,8 +1901,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	union
 	(select
 		'GAZETTEER' as object_type,
-		gazetteer.gazetteer_guid,
-		gazetteer.gazetteer_localid,
+		gazetteer.gazetteer_guid as guid,
+		gazetteer.gazetteer_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
 		count(*)
@@ -1917,8 +1917,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	union
 	(select
 		'LOCATION' as object_type,
-		location.location_guid,
-		location.location_localid,
+		location.location_guid as guid,
+		location.location_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
 		count(*)
@@ -1933,8 +1933,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	union
 	(select
 		'PLACE' as object_type,
-		place.place_guid,
-		place.place_localid,
+		place.place_guid as guid,
+		place.place_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
 		count(*)
@@ -1949,8 +1949,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
-		victim_assistance.guid,
-		victim_assistance.localid,
+		victim_assistance.guid as guid,
+		victim_assistance.localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
 		count(*)
@@ -1965,8 +1965,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	union
 	(select
 		'TASK' as object_type,
-		task.guid,
-		task.localid,
+		task.guid as guid,
+		task.localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
 		count(*)
@@ -1981,8 +1981,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid as
 	union
 	(select
 		'ORGANISATION' as object_type,
-		organisation.org_guid,
-		organisation.org_localid,
+		organisation.org_guid as guid,
+		organisation.org_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		geospatialinfo.shape_id,
 		count(*)
@@ -2005,8 +2005,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 
 	(select
 		'HAZARD' as object_type,
-		hazard.hazard_guid,
-		hazard.hazard_localid,
+		hazard.hazard_guid as guid,
+		hazard.hazard_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
 		count(*)
@@ -2021,8 +2021,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	union
 	(select
 		'HAZARD REDUCTION' as object_type,
-		hazreduc.hazreduc_guid,
-		hazreduc.hazreduc_localid,
+		hazreduc.hazreduc_guid as guid,
+		hazreduc.hazreduc_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
 		count(*)
@@ -2037,8 +2037,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	union
 	(select
 		'ACCIDENT' as object_type,
-		accident.accident_guid,
-		accident.accident_localid,
+		accident.accident_guid as guid,
+		accident.accident_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
 		count(*)
@@ -2053,8 +2053,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	union
 	(select
 		'MRE' as object_type,
-		mre.mre_guid,
-		mre.mre_localid,
+		mre.mre_guid as guid,
+		mre.mre_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
 		count(*)
@@ -2069,8 +2069,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	union
 	(select
 		'QA' as object_type,
-		qa.qa_guid,
-		qa.qa_localid,
+		qa.qa_guid as guid,
+		qa.qa_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
 		count(*)
@@ -2085,8 +2085,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	union
 	(select
 		'VICTIM' as object_type,
-		victim.victim_guid,
-		victim.victim_localid,
+		victim.victim_guid as guid,
+		victim.victim_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
 		count(*)
@@ -2101,8 +2101,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	union
 	(select
 		'GAZETTEER' as object_type,
-		gazetteer.gazetteer_guid,
-		gazetteer.gazetteer_localid,
+		gazetteer.gazetteer_guid as guid,
+		gazetteer.gazetteer_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
 		count(*)
@@ -2117,8 +2117,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	union
 	(select
 		'LOCATION' as object_type,
-		location.location_guid,
-		location.location_localid,
+		location.location_guid as guid,
+		location.location_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
 		count(*)
@@ -2133,8 +2133,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	union
 	(select
 		'PLACE' as object_type,
-		place.place_guid,
-		place.place_localid,
+		place.place_guid as guid,
+		place.place_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
 		count(*)
@@ -2149,8 +2149,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
-		victim_assistance.guid,
-		victim_assistance.localid,
+		victim_assistance.guid as guid,
+		victim_assistance.localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
 		count(*)
@@ -2165,8 +2165,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	union
 	(select
 		'TASK' as object_type,
-		task.guid,
-		task.localid,
+		task.guid as guid,
+		task.localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
 		count(*)
@@ -2181,8 +2181,8 @@ create or replace view public.geocheck_duplicate_polygon_polyid_trimmed as
 	union
 	(select
 		'ORGANISATION' as object_type,
-		organisation.org_guid,
-		organisation.org_localid,
+		organisation.org_guid as guid,
+		organisation.org_localid as localid,
 		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
 		trim(geospatialinfo.shape_id) as shape_id,
 		count(*)
@@ -2205,8 +2205,8 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 
 	(select
 		'HAZARD' as object_type,
-		hazard.hazard_guid,
-		hazard.hazard_localid,
+		hazard.hazard_guid as guid,
+		hazard.hazard_localid as localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2223,8 +2223,8 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	union
 	(select
 		'HAZARD REDUCTION' as object_type,
-		hazreduc.hazreduc_guid,
-		hazreduc.hazreduc_localid,
+		hazreduc.hazreduc_guid as guid,
+		hazreduc.hazreduc_localid as localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2241,8 +2241,8 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	union
 	(select
 		'ACCIDENT' as object_type,
-		accident.accident_guid,
-		accident.accident_localid,
+		accident.accident_guid as guid,
+		accident.accident_localid as localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2259,8 +2259,8 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	union
 	(select
 		'MRE' as object_type,
-		mre.mre_guid,
-		mre.mre_localid,
+		mre.mre_guid as guid,
+		mre.mre_localid as localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2277,8 +2277,8 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	union
 	(select
 		'QA' as object_type,
-		qa.qa_guid,
-		qa.qa_localid,
+		qa.qa_guid as guid,
+		qa.qa_localid as localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2295,8 +2295,8 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	union
 	(select
 		'VICTIM' as object_type,
-		victim.victim_guid,
-		victim.victim_localid,
+		victim.victim_guid as guid,
+		victim.victim_localid as localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2313,8 +2313,8 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	union
 	(select
 		'GAZETTEER' as object_type,
-		gazetteer.gazetteer_guid,
-		gazetteer.gazetteer_localid,
+		gazetteer.gazetteer_guid as guid,
+		gazetteer.gazetteer_localid as localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2331,8 +2331,8 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	union
 	(select
 		'LOCATION' as object_type,
-		location.location_guid,
-		location.location_localid,
+		location.location_guid as guid,
+		location.location_localid as localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2349,8 +2349,8 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	union
 	(select
 		'PLACE' as object_type,
-		place.place_guid,
-		place.place_localid,
+		place.place_guid as guid,
+		place.place_localid as localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2367,8 +2367,8 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
-		victim_assistance.guid,
-		victim_assistance.localid,
+		victim_assistance.guid as guid,
+		victim_assistance.localid as localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2385,8 +2385,8 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	union
 	(select
 		'TASK' as object_type,
-		task.guid,
-		task.localid,
+		task.guid as guid,
+		task.localid as localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2403,8 +2403,8 @@ create or replace view public.geocheck_duplicate_point_point_localid as
 	union
 	(select
 		'ORGANISATION' as object_type,
-		organisation.org_guid,
-		organisation.org_localid,
+		organisation.org_guid as guid,
+		organisation.org_localid as localid,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2429,8 +2429,8 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 
 	(select
 		'HAZARD' as object_type,
-		hazard.hazard_guid,
-		hazard.hazard_localid,
+		hazard.hazard_guid as guid,
+		hazard.hazard_localid as localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2447,8 +2447,8 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	union
 	(select
 		'HAZARD REDUCTION' as object_type,
-		hazreduc.hazreduc_guid,
-		hazreduc.hazreduc_localid,
+		hazreduc.hazreduc_guid as guid,
+		hazreduc.hazreduc_localid as localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2465,8 +2465,8 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	union
 	(select
 		'ACCIDENT' as object_type,
-		accident.accident_guid,
-		accident.accident_localid,
+		accident.accident_guid as guid,
+		accident.accident_localid as localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2483,8 +2483,8 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	union
 	(select
 		'MRE' as object_type,
-		mre.mre_guid,
-		mre.mre_localid,
+		mre.mre_guid as guid,
+		mre.mre_localid as localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2501,8 +2501,8 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	union
 	(select
 		'QA' as object_type,
-		qa.qa_guid,
-		qa.qa_localid,
+		qa.qa_guid as guid,
+		qa.qa_localid as localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2519,8 +2519,8 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	union
 	(select
 		'VICTIM' as object_type,
-		victim.victim_guid,
-		victim.victim_localid,
+		victim.victim_guid as guid,
+		victim.victim_localid as localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2537,8 +2537,8 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	union
 	(select
 		'GAZETTEER' as object_type,
-		gazetteer.gazetteer_guid,
-		gazetteer.gazetteer_localid,
+		gazetteer.gazetteer_guid as guid,
+		gazetteer.gazetteer_localid as localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2555,8 +2555,8 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	union
 	(select
 		'LOCATION' as object_type,
-		location.location_guid,
-		location.location_localid,
+		location.location_guid as guid,
+		location.location_localid as localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2573,8 +2573,8 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	union
 	(select
 		'PLACE' as object_type,
-		place.place_guid,
-		place.place_localid,
+		place.place_guid as guid,
+		place.place_localid as localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2591,8 +2591,8 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
-		victim_assistance.guid,
-		victim_assistance.localid,
+		victim_assistance.guid as guid,
+		victim_assistance.localid as localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2609,8 +2609,8 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	union
 	(select
 		'TASK' as object_type,
-		task.guid,
-		task.localid,
+		task.guid as guid,
+		task.localid as localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2627,8 +2627,8 @@ create or replace view public.geocheck_duplicate_point_point_localid_trimmed as
 	union
 	(select
 		'ORGANISATION' as object_type,
-		organisation.org_guid,
-		organisation.org_localid,
+		organisation.org_guid as guid,
+		organisation.org_localid as localid,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
 		string_agg(pointno :: TEXT,', ') as dup_point_numbers
@@ -2653,8 +2653,8 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 
 	(select
 		'HAZARD' as object_type,
-		hazard.hazard_guid,
-		hazard.hazard_localid,
+		hazard.hazard_guid as guid,
+		hazard.hazard_localid as localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -2666,14 +2666,14 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by hazard.hazard_guid, hazard.hazard_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by hazard.hazard_guid, hazard.hazard_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'HAZARD REDUCTION' as object_type,
-		hazreduc.hazreduc_guid,
-		hazreduc.hazreduc_localid,
+		hazreduc.hazreduc_guid as guid,
+		hazreduc.hazreduc_localid as localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -2685,14 +2685,14 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by hazreduc.hazreduc_guid, hazreduc.hazreduc_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by hazreduc.hazreduc_guid, hazreduc.hazreduc_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'ACCIDENT' as object_type,
-		accident.accident_guid,
-		accident.accident_localid,
+		accident.accident_guid as guid,
+		accident.accident_localid as localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -2704,14 +2704,14 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by accident.accident_guid, accident.accident_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by accident.accident_guid, accident.accident_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'MRE' as object_type,
-		mre.mre_guid,
-		mre.mre_localid,
+		mre.mre_guid as guid,
+		mre.mre_localid as localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -2723,14 +2723,14 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by mre.mre_guid, mre.mre_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by mre.mre_guid, mre.mre_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'QA' as object_type,
-		qa.qa_guid,
-		qa.qa_localid,
+		qa.qa_guid as guid,
+		qa.qa_localid as localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -2742,14 +2742,14 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by qa.qa_guid, qa.qa_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by qa.qa_guid, qa.qa_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM' as object_type,
-		victim.victim_guid,
-		victim.victim_localid,
+		victim.victim_guid as guid,
+		victim.victim_localid as localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -2761,14 +2761,14 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by victim.victim_guid, victim.victim_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by victim.victim_guid, victim.victim_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'GAZETTEER' as object_type,
-		gazetteer.gazetteer_guid,
-		gazetteer.gazetteer_localid,
+		gazetteer.gazetteer_guid as guid,
+		gazetteer.gazetteer_localid as localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -2780,14 +2780,14 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by gazetteer.gazetteer_guid, gazetteer.gazetteer_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by gazetteer.gazetteer_guid, gazetteer.gazetteer_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'LOCATION' as object_type,
-		location.location_guid,
-		location.location_localid,
+		location.location_guid as guid,
+		location.location_localid as localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -2799,14 +2799,14 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by location.location_guid, location.location_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by location.location_guid, location.location_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'PLACE' as object_type,
-		place.place_guid,
-		place.place_localid,
+		place.place_guid as guid,
+		place.place_localid as localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -2818,14 +2818,14 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by place.place_guid, place.place_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by place.place_guid, place.place_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
-		victim_assistance.guid,
-		victim_assistance.localid,
+		victim_assistance.guid as guid,
+		victim_assistance.localid as localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -2837,14 +2837,14 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by victim_assistance.guid, victim_assistance.localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by victim_assistance.guid, victim_assistance.localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'TASK' as object_type,
-		task.guid,
-		task.localid,
+		task.guid as guid,
+		task.localid as localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -2856,14 +2856,14 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by task.guid, task.localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by task.guid, task.localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
 	(select
 		'ORGANISATION' as object_type,
-		organisation.org_guid,
-		organisation.org_localid,
+		organisation.org_guid as guid,
+		organisation.org_localid as localid,
 		geospatialinfo.shape_id,
 		geopoint.pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -2875,7 +2875,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid as
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by organisation.org_guid, organisation.org_localid, geospatialinfo.shape_id, geopoint.pointlocal_id, ime02.enumvalue
+	group by organisation.org_guid, organisation.org_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, geopoint.pointlocal_id, ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	order by 1,3;
@@ -2889,8 +2889,8 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 
 	(select
 		'HAZARD' as object_type,
-		hazard.hazard_guid,
-		hazard.hazard_localid,
+		hazard.hazard_guid as guid,
+		hazard.hazard_localid as localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -2908,8 +2908,8 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	union
 	(select
 		'HAZARD REDUCTION' as object_type,
-		hazreduc.hazreduc_guid,
-		hazreduc.hazreduc_localid,
+		hazreduc.hazreduc_guid as guid,
+		hazreduc.hazreduc_localid as localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -2927,8 +2927,8 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	union
 	(select
 		'ACCIDENT' as object_type,
-		accident.accident_guid,
-		accident.accident_localid,
+		accident.accident_guid as guid,
+		accident.accident_localid as localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -2946,8 +2946,8 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	union
 	(select
 		'MRE' as object_type,
-		mre.mre_guid,
-		mre.mre_localid,
+		mre.mre_guid as guid,
+		mre.mre_localid as localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -2965,8 +2965,8 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	union
 	(select
 		'QA' as object_type,
-		qa.qa_guid,
-		qa.qa_localid,
+		qa.qa_guid as guid,
+		qa.qa_localid as localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -2984,8 +2984,8 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	union
 	(select
 		'VICTIM' as object_type,
-		victim.victim_guid,
-		victim.victim_localid,
+		victim.victim_guid as guid,
+		victim.victim_localid as localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -3003,8 +3003,8 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	union
 	(select
 		'GAZETTEER' as object_type,
-		gazetteer.gazetteer_guid,
-		gazetteer.gazetteer_localid,
+		gazetteer.gazetteer_guid as guid,
+		gazetteer.gazetteer_localid as localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -3022,8 +3022,8 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	union
 	(select
 		'LOCATION' as object_type,
-		location.location_guid,
-		location.location_localid,
+		location.location_guid as guid,
+		location.location_localid as localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -3041,8 +3041,8 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	union
 	(select
 		'PLACE' as object_type,
-		place.place_guid,
-		place.place_localid,
+		place.place_guid as guid,
+		place.place_localid as localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -3060,8 +3060,8 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
-		victim_assistance.guid,
-		victim_assistance.localid,
+		victim_assistance.guid as guid,
+		victim_assistance.localid as localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -3079,8 +3079,8 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	union
 	(select
 		'TASK' as object_type,
-		task.guid,
-		task.localid,
+		task.guid as guid,
+		task.localid as localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -3098,8 +3098,8 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 	union
 	(select
 		'ORGANISATION' as object_type,
-		organisation.org_guid,
-		organisation.org_localid,
+		organisation.org_guid as guid,
+		organisation.org_localid as localid,
 		geospatialinfo.shape_id,
 		trim(geopoint.pointlocal_id) as pointlocal_id,
 		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
@@ -3125,8 +3125,8 @@ create or replace view public.geocheck_duplicate_polygons as
 
 	(select
 		'HAZARD' as object_type,
-		hazard_guid,
-		hazard_localid,
+		hazard_guid as guid,
+		hazard_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_hazard_polys
 	group by hazard_guid, hazard_localid, shape
@@ -3135,8 +3135,8 @@ create or replace view public.geocheck_duplicate_polygons as
 	union
 	(select
 		'HAZARD REDUCTION' as object_type,
-		hazreduc_guid,
-		hazreduc_localid,
+		hazreduc_guid as guid,
+		hazreduc_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_hazreduc_polys
 	group by hazreduc_guid, hazreduc_localid, shape
@@ -3145,8 +3145,8 @@ create or replace view public.geocheck_duplicate_polygons as
 	union
 	(select
 		'ACCIDENT' as object_type,
-		accident_guid,
-		accident_localid,
+		accident_guid as guid,
+		accident_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_accident_polys
 	group by accident_guid, accident_localid, shape
@@ -3155,8 +3155,8 @@ create or replace view public.geocheck_duplicate_polygons as
 	union
 	(select
 		'MRE' as object_type,
-		mre_guid,
-		mre_localid,
+		mre_guid as guid,
+		mre_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_mre_polys
 	group by mre_guid, mre_localid, shape
@@ -3165,8 +3165,8 @@ create or replace view public.geocheck_duplicate_polygons as
 	union
 	(select
 		'QA' as object_type,
-		qa_guid,
-		qa_localid,
+		qa_guid as guid,
+		qa_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_qa_polys
 	group by qa_guid, qa_localid, shape
@@ -3175,8 +3175,8 @@ create or replace view public.geocheck_duplicate_polygons as
 	union
 	(select
 		'VICTIM' as object_type,
-		victim_guid,
-		victim_localid,
+		victim_guid as guid,
+		victim_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_victim_polys
 	group by victim_guid, victim_localid, shape
@@ -3185,8 +3185,8 @@ create or replace view public.geocheck_duplicate_polygons as
 	union
 	(select
 		'GAZETTEER' as object_type,
-		gazetteer_guid,
-		gazetteer_localid,
+		gazetteer_guid as guid,
+		gazetteer_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_gazetteer_polys
 	group by gazetteer_guid, gazetteer_localid, shape
@@ -3195,8 +3195,8 @@ create or replace view public.geocheck_duplicate_polygons as
 	union
 	(select
 		'LOCATION' as object_type,
-		location_guid,
-		location_localid,
+		location_guid as guid,
+		location_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_location_polys
 	group by location_guid, location_localid, shape
@@ -3205,8 +3205,8 @@ create or replace view public.geocheck_duplicate_polygons as
 	union
 	(select
 		'PLACE' as object_type,
-		place_guid,
-		place_localid,
+		place_guid as guid,
+		place_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_place_polys
 	group by place_guid, place_localid, shape
@@ -3215,8 +3215,8 @@ create or replace view public.geocheck_duplicate_polygons as
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
-		guid,
-		localid,
+		guid as guid,
+		localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_victim_assistance_polys
 	group by guid, localid, shape
@@ -3225,8 +3225,8 @@ create or replace view public.geocheck_duplicate_polygons as
 	union
 	(select
 		'TASK' as object_type,
-		guid,
-		localid,
+		guid as guid,
+		localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_task_polys
 	group by guid, localid, shape
@@ -3235,8 +3235,8 @@ create or replace view public.geocheck_duplicate_polygons as
 	union
 	(select
 		'ORGANISATION' as object_type,
-		org_guid,
-		org_localid,
+		org_guid as guid,
+		org_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_organisation_polys
 	group by org_guid, org_localid, shape
@@ -3252,145 +3252,157 @@ drop view if exists public.geocheck_duplicate_polygon_points CASCADE;
 create or replace view public.geocheck_duplicate_polygon_points as
 	(select
 		'HAZARD' as object_type,
-		hazard_guid,
-		hazard_localid,
+		hazard_guid as guid,
+		hazard_localid as localid,
 		shape_id,
-		string_agg(pointno :: TEXT,', ') as dup_point_numbers
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
 	from geocheck_zint_hazard_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by hazard_guid, hazard_localid, shape_id, shape
+	group by hazard_guid, hazard_localid, shape_id, geospatialinfo_guid, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(	select
 		'HAZARD REDUCTION' as object_type,
-		hazreduc_guid,
-		hazreduc_localid,
+		hazreduc_guid as guid,
+		hazreduc_localid as localid,
 		shape_id,
-		string_agg(pointno :: TEXT,', ') as dup_point_numbers
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
 	from geocheck_zint_hazreduc_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by hazreduc_guid, hazreduc_localid, shape_id, shape
+	group by hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(select
 		'ACCIDENT' as object_type,
-		accident_guid,
-		accident_localid,
+		accident_guid as guid,
+		accident_localid as localid,
 		shape_id,
-		string_agg(pointno :: TEXT,', ') as dup_point_numbers
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
 	from geocheck_zint_accident_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by accident_guid, accident_localid, shape_id, shape
+	group by accident_guid, accident_localid, shape_id, geospatialinfo_guid, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(select
 		'MRE' as object_type,
-		mre_guid,
-		mre_localid,
+		mre_guid as guid,
+		mre_localid as localid,
 		shape_id,
-		string_agg(pointno :: TEXT,', ') as dup_point_numbers
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
 	from geocheck_zint_mre_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by mre_guid, mre_localid, shape_id, shape
+	group by mre_guid, mre_localid, shape_id, geospatialinfo_guid, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(select
 		'QA' as object_type,
-		qa_guid,
-		qa_localid,
+		qa_guid as guid,
+		qa_localid as localid,
 		shape_id,
-		string_agg(pointno :: TEXT,', ') as dup_point_numbers
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
 	from geocheck_zint_qa_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by qa_guid, qa_localid, shape_id, shape
+	group by qa_guid, qa_localid, shape_id, geospatialinfo_guid, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(select
 		'VICTIM' as object_type,
-		victim_guid,
-		victim_localid,
+		victim_guid as guid,
+		victim_localid as localid,
 		shape_id,
-		string_agg(pointno :: TEXT,', ') as dup_point_numbers
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
 	from geocheck_zint_victim_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by victim_guid, victim_localid, shape_id, shape
+	group by victim_guid, victim_localid, shape_id, geospatialinfo_guid, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(select
 		'GAZETTEER' as object_type,
-		gazetteer_guid,
-		gazetteer_localid,
+		gazetteer_guid as guid,
+		gazetteer_localid as localid,
 		shape_id,
-		string_agg(pointno :: TEXT,', ') as dup_point_numbers
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
 	from geocheck_zint_gazetteer_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by gazetteer_guid, gazetteer_localid, shape_id, shape
+	group by gazetteer_guid, gazetteer_localid, shape_id, geospatialinfo_guid, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(select
 		'LOCATION' as object_type,
-		location_guid,
-		location_localid,
+		location_guid as guid,
+		location_localid as localid,
 		shape_id,
-		string_agg(pointno :: TEXT,', ') as dup_point_numbers
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
 	from geocheck_zint_location_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by location_guid, location_localid, shape_id, shape
+	group by location_guid, location_localid, shape_id, geospatialinfo_guid, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(select
 		'PLACE' as object_type,
-		place_guid,
-		place_localid,
+		place_guid as guid,
+		place_localid as localid,
 		shape_id,
-		string_agg(pointno :: TEXT,', ') as dup_point_numbers
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
 	from geocheck_zint_place_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by place_guid, place_localid, shape_id, shape
+	group by place_guid, place_localid, shape_id, geospatialinfo_guid, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
-		guid,
-		localid,
+		guid as guid,
+		localid as localid,
 		shape_id,
-		string_agg(pointno :: TEXT,', ') as dup_point_numbers
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
 	from geocheck_zint_victim_assistance_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by guid, localid, shape_id, shape
+	group by guid, localid, shape_id, geospatialinfo_guid, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(select
 		'TASK' as object_type,
-		guid,
-		localid,
+		guid as guid,
+		localid as localid,
 		shape_id,
-		string_agg(pointno :: TEXT,', ') as dup_point_numbers
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
 	from geocheck_zint_task_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by guid, localid, shape_id, shape
+	group by guid, localid, shape_id, geospatialinfo_guid, shape
 	having count(*) > 1
 	order by 3,4)
 	union
 	(select
 		'ORGANISATION' as object_type,
-		org_guid,
-		org_localid,
+		org_guid as guid,
+		org_localid as localid,
 		shape_id,
-		string_agg(pointno :: TEXT,', ') as dup_point_numbers
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
 	from geocheck_zint_organisation_pts
 	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
-	group by org_guid, org_localid, shape_id, shape
+	group by org_guid, org_localid, shape_id, geospatialinfo_guid, shape
 	having count(*) > 1
 	order by 3,4)
 	order by 1, 3;
@@ -3403,9 +3415,11 @@ drop view if exists public.geocheck_duplicate_points CASCADE;
 create or replace view public.geocheck_duplicate_points as
 	(select
 		'HAZARD' as object_type,
-		hazard.hazard_guid,
-		hazard.hazard_localid,
-		string_agg(pointlocal_id,', ') as dup_point_ids
+		hazard.hazard_guid as guid,
+		hazard.hazard_localid as localid,
+		string_agg(geopoint_guid,'|' order by pointtypeenum, geopoint_guid) as guids,
+		string_agg(pointtypeenum,'|' order by pointtypeenum, geopoint_guid) as pointtypes,
+		string_agg(pointlocal_id,'|' order by pointtypeenum, geopoint_guid) as dup_point_ids
 	from geocheck_zint_hazard_pts
 		inner join geospatialinfo on geocheck_zint_hazard_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
 		inner join hazard_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = hazard_has_geospatialinfo.geospatialinfo_guid
@@ -3418,9 +3432,11 @@ create or replace view public.geocheck_duplicate_points as
 	union
 	(select
 		'HAZARD REDUCTION' as object_type,
-		hazreduc.hazreduc_guid,
-		hazreduc.hazreduc_localid,
-		string_agg(pointlocal_id,', ') as dup_point_ids
+		hazreduc.hazreduc_guid as guid,
+		hazreduc.hazreduc_localid as localid,
+		string_agg(geopoint_guid,'|' order by pointtypeenum, geopoint_guid) as guids,
+		string_agg(pointtypeenum,'|' order by pointtypeenum, geopoint_guid) as pointtypes,
+		string_agg(pointlocal_id,'|' order by pointtypeenum, geopoint_guid) as dup_point_ids
 	from geocheck_zint_hazreduc_pts
 		inner join geospatialinfo on geocheck_zint_hazreduc_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
 		inner join hazreduc_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = hazreduc_has_geospatialinfo.geospatialinfo_guid
@@ -3433,9 +3449,11 @@ create or replace view public.geocheck_duplicate_points as
 	union
 	(select
 		'ACCIDENT' as object_type,
-		accident.accident_guid,
-		accident.accident_localid,
-		string_agg(pointlocal_id,', ') as dup_point_ids
+		accident.accident_guid as guid,
+		accident.accident_localid as localid,
+		string_agg(geopoint_guid,'|' order by pointtypeenum, geopoint_guid) as guids,
+		string_agg(pointtypeenum,'|' order by pointtypeenum, geopoint_guid) as pointtypes,
+		string_agg(pointlocal_id,'|' order by pointtypeenum, geopoint_guid) as dup_point_ids
 	from geocheck_zint_accident_pts
 		inner join geospatialinfo on geocheck_zint_accident_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
 		inner join accident_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = accident_has_geospatialinfo.geospatialinfo_guid
@@ -3448,9 +3466,11 @@ create or replace view public.geocheck_duplicate_points as
 	union
 	(select
 		'MRE' as object_type,
-		mre.mre_guid,
-		mre.mre_localid,
-		string_agg(pointlocal_id,', ') as dup_point_ids
+		mre.mre_guid as guid,
+		mre.mre_localid as localid,
+		string_agg(geopoint_guid,'|' order by pointtypeenum, geopoint_guid) as guids,
+		string_agg(pointtypeenum,'|' order by pointtypeenum, geopoint_guid) as pointtypes,
+		string_agg(pointlocal_id,'|' order by pointtypeenum, geopoint_guid) as dup_point_ids
 	from geocheck_zint_mre_pts
 		inner join geospatialinfo on geocheck_zint_mre_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
 		inner join mre_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = mre_has_geospatialinfo.geospatialinfo_guid
@@ -3463,9 +3483,11 @@ create or replace view public.geocheck_duplicate_points as
 	union
 	(select
 		'QA' as object_type,
-		qa.qa_guid,
-		qa.qa_localid,
-		string_agg(pointlocal_id,', ') as dup_point_ids
+		qa.qa_guid as guid,
+		qa.qa_localid as localid,
+		string_agg(geopoint_guid,'|' order by pointtypeenum, geopoint_guid) as guids,
+		string_agg(pointtypeenum,'|' order by pointtypeenum, geopoint_guid) as pointtypes,
+		string_agg(pointlocal_id,'|' order by pointtypeenum, geopoint_guid) as dup_point_ids
 	from geocheck_zint_qa_pts
 		inner join geospatialinfo on geocheck_zint_qa_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
 		inner join qa_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = qa_has_geospatialinfo.geospatialinfo_guid
@@ -3478,9 +3500,11 @@ create or replace view public.geocheck_duplicate_points as
 	union
 	(select
 		'VICTIM' as object_type,
-		victim.victim_guid,
-		victim.victim_localid,
-		string_agg(pointlocal_id,', ') as dup_point_ids
+		victim.victim_guid as guid,
+		victim.victim_localid as localid,
+		string_agg(geopoint_guid,'|' order by pointtypeenum, geopoint_guid) as guids,
+		string_agg(pointtypeenum,'|' order by pointtypeenum, geopoint_guid) as pointtypes,
+		string_agg(pointlocal_id,'|' order by pointtypeenum, geopoint_guid) as dup_point_ids
 	from geocheck_zint_victim_pts
 		inner join geospatialinfo on geocheck_zint_victim_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
 		inner join victim_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = victim_has_geospatialinfo.geospatialinfo_guid
@@ -3493,9 +3517,11 @@ create or replace view public.geocheck_duplicate_points as
 	union
 	(select
 		'GAZETTEER' as object_type,
-		gazetteer.gazetteer_guid,
-		gazetteer.gazetteer_localid,
-		string_agg(pointlocal_id,', ') as dup_point_ids
+		gazetteer.gazetteer_guid as guid,
+		gazetteer.gazetteer_localid as localid,
+		string_agg(geopoint_guid,'|' order by pointtypeenum, geopoint_guid) as guids,
+		string_agg(pointtypeenum,'|' order by pointtypeenum, geopoint_guid) as pointtypes,
+		string_agg(pointlocal_id,'|' order by pointtypeenum, geopoint_guid) as dup_point_ids
 	from geocheck_zint_gazetteer_pts
 		inner join geospatialinfo on geocheck_zint_gazetteer_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
 		inner join gazetteer_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = gazetteer_has_geospatialinfo.geospatialinfo_guid
@@ -3508,9 +3534,11 @@ create or replace view public.geocheck_duplicate_points as
 	union
 	(select
 		'LOCATION' as object_type,
-		location.location_guid,
-		location.location_localid,
-		string_agg(pointlocal_id,', ') as dup_point_ids
+		location.location_guid as guid,
+		location.location_localid as localid,
+		string_agg(geopoint_guid,'|' order by pointtypeenum, geopoint_guid) as guids,
+		string_agg(pointtypeenum,'|' order by pointtypeenum, geopoint_guid) as pointtypes,
+		string_agg(pointlocal_id,'|' order by pointtypeenum, geopoint_guid) as dup_point_ids
 	from geocheck_zint_location_pts
 		inner join geospatialinfo on geocheck_zint_location_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
 		inner join location_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = location_has_geospatialinfo.geospatialinfo_guid
@@ -3523,9 +3551,11 @@ create or replace view public.geocheck_duplicate_points as
 	union
 	(select
 		'PLACE' as object_type,
-		place.place_guid,
-		place.place_localid,
-		string_agg(pointlocal_id,', ') as dup_point_ids
+		place.place_guid as guid,
+		place.place_localid as localid,
+		string_agg(geopoint_guid,'|' order by pointtypeenum, geopoint_guid) as guids,
+		string_agg(pointtypeenum,'|' order by pointtypeenum, geopoint_guid) as pointtypes,
+		string_agg(pointlocal_id,'|' order by pointtypeenum, geopoint_guid) as dup_point_ids
 	from geocheck_zint_place_pts
 		inner join geospatialinfo on geocheck_zint_place_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
 		inner join place_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = place_has_geospatialinfo.geospatialinfo_guid
@@ -3538,9 +3568,11 @@ create or replace view public.geocheck_duplicate_points as
 	union
 	(select
 		'VICTIM ASSISTANCE' as object_type,
-		victim_assistance.guid,
-		victim_assistance.localid,
-		string_agg(pointlocal_id,', ') as dup_point_ids
+		victim_assistance.guid as guid,
+		victim_assistance.localid as localid,
+		string_agg(geopoint_guid,'|' order by pointtypeenum, geopoint_guid) as guids,
+		string_agg(pointtypeenum,'|' order by pointtypeenum, geopoint_guid) as pointtypes,
+		string_agg(pointlocal_id,'|' order by pointtypeenum, geopoint_guid) as dup_point_ids
 	from geocheck_zint_victim_assistance_pts
 		inner join geospatialinfo on geocheck_zint_victim_assistance_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
 		inner join victim_assistance_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = victim_assistance_has_geospatialinfo.geospatialinfo_guid
@@ -3553,9 +3585,11 @@ create or replace view public.geocheck_duplicate_points as
 	union
 	(select
 		'TASK' as object_type,
-		task.guid,
-		task.localid,
-		string_agg(pointlocal_id,', ') as dup_point_ids
+		task.guid as guid,
+		task.localid as localid,
+		string_agg(geopoint_guid,'|' order by pointtypeenum, geopoint_guid) as guids,
+		string_agg(pointtypeenum,'|' order by pointtypeenum, geopoint_guid) as pointtypes,
+		string_agg(pointlocal_id,'|' order by pointtypeenum, geopoint_guid) as dup_point_ids
 	from geocheck_zint_task_pts
 		inner join geospatialinfo on geocheck_zint_task_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
 		inner join task_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = task_has_geospatialinfo.geospatialinfo_guid
@@ -3568,9 +3602,11 @@ create or replace view public.geocheck_duplicate_points as
 	union
 	(select
 		'ORGANISATION' as object_type,
-		organisation.org_guid,
-		organisation.org_localid,
-		string_agg(pointlocal_id,', ') as dup_point_ids
+		organisation.org_guid as guid,
+		organisation.org_localid as localid,
+		string_agg(geopoint_guid,'|' order by pointtypeenum, geopoint_guid) as guids,
+		string_agg(pointtypeenum,'|' order by pointtypeenum, geopoint_guid) as pointtypes,
+		string_agg(pointlocal_id,'|' order by pointtypeenum, geopoint_guid) as dup_point_ids
 	from geocheck_zint_organisation_pts
 		inner join geospatialinfo on geocheck_zint_organisation_pts.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
 		inner join organisation_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = organisation_has_geospatialinfo.geospatialinfo_guid

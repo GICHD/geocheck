@@ -62,7 +62,9 @@ create or replace view public.geocheck_zint_hazard_polys as
 	select hazard_guid, hazard_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
-		count(*) as pointcount
+		count(*) as pointcount,
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
 	from (select hazard_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_hazard_pts where shapeenum = 'Polygon' 
 		order by hazard_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -195,7 +197,9 @@ create or replace view public.geocheck_zint_hazreduc_polys as
 	select hazreduc_guid, hazreduc_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
-		count(*) as pointcount
+		count(*) as pointcount,
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
 	from (select hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_hazreduc_pts where shapeenum = 'Polygon' 
 		order by hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -328,7 +332,9 @@ create or replace view public.geocheck_zint_accident_polys as
 	select accident_guid, accident_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
-		count(*) as pointcount
+		count(*) as pointcount,
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
 	from (select accident_guid, accident_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_accident_pts where shapeenum = 'Polygon' 
 		order by accident_guid, accident_localid, shape_id, geospatialinfo_guid, pointno)	as values 
@@ -461,7 +467,9 @@ create or replace view public.geocheck_zint_mre_polys as
 	select mre_guid, mre_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
-		count(*) as pointcount
+		count(*) as pointcount,
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
 	from (select mre_guid, mre_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_mre_pts where shapeenum = 'Polygon' 
 		order by mre_guid, mre_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -593,7 +601,9 @@ create or replace view public.geocheck_zint_qa_polys as
 	select qa_guid, qa_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
-		count(*) as pointcount
+		count(*) as pointcount,
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
 	from (select qa_guid, qa_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_qa_pts where shapeenum = 'Polygon' 
 		order by qa_guid, qa_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -725,7 +735,9 @@ create or replace view public.geocheck_zint_victim_polys as
 	select victim_guid, victim_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
-		count(*) as pointcount
+		count(*) as pointcount,
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
 	from (select victim_guid, victim_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_victim_pts where shapeenum = 'Polygon' 
 		order by victim_guid, victim_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -857,7 +869,9 @@ create or replace view public.geocheck_zint_victim_assistance_polys as
 	select guid, localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
-		count(*) as pointcount
+		count(*) as pointcount,
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
 	from (select guid, localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_victim_assistance_pts where shapeenum = 'Polygon' 
 		order by guid, localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -990,7 +1004,9 @@ create or replace view public.geocheck_zint_task_polys as
 	select guid, localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
-		count(*) as pointcount
+		count(*) as pointcount,
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
 	from (select guid, localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_task_pts where shapeenum = 'Polygon' 
 		order by guid, localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -1122,7 +1138,9 @@ create or replace view public.geocheck_zint_gazetteer_polys as
 	select gazetteer_guid, gazetteer_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
-		count(*) as pointcount
+		count(*) as pointcount,
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
 	from (select gazetteer_guid, gazetteer_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_gazetteer_pts where shapeenum = 'Polygon' 
 		order by gazetteer_guid, gazetteer_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -1254,7 +1272,9 @@ create or replace view public.geocheck_zint_location_polys as
 	select location_guid, location_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
-		count(*) as pointcount
+		count(*) as pointcount,
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
 	from (select location_guid, location_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_location_pts where shapeenum = 'Polygon' 
 		order by location_guid, location_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -1386,7 +1406,9 @@ create or replace view public.geocheck_zint_place_polys as
 	select place_guid, place_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
-		count(*) as pointcount
+		count(*) as pointcount,
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
 	from (select place_guid, place_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_place_pts where shapeenum = 'Polygon' 
 		order by place_guid, place_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -1518,7 +1540,9 @@ create or replace view public.geocheck_zint_organisation_polys as
 	select org_guid, org_localid, shape_id,
 		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
 		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
-		count(*) as pointcount
+		count(*) as pointcount,
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
 	from (select org_guid, org_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_organisation_pts where shapeenum = 'Polygon' 
 		order by org_guid, org_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -3129,7 +3153,7 @@ create or replace view public.geocheck_duplicate_polygons as
 		hazard_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_hazard_polys
-	group by hazard_guid, hazard_localid, shape
+	group by hazard_guid, hazard_localid, shape, area
 	having count(*) > 1
 	order by 3)
 	union
@@ -3139,7 +3163,7 @@ create or replace view public.geocheck_duplicate_polygons as
 		hazreduc_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_hazreduc_polys
-	group by hazreduc_guid, hazreduc_localid, shape
+	group by hazreduc_guid, hazreduc_localid, shape, area
 	having count(*) > 1
 	order by 3)
 	union
@@ -3149,7 +3173,7 @@ create or replace view public.geocheck_duplicate_polygons as
 		accident_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_accident_polys
-	group by accident_guid, accident_localid, shape
+	group by accident_guid, accident_localid, shape, area
 	having count(*) > 1
 	order by 3)
 	union
@@ -3159,7 +3183,7 @@ create or replace view public.geocheck_duplicate_polygons as
 		mre_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_mre_polys
-	group by mre_guid, mre_localid, shape
+	group by mre_guid, mre_localid, shape, area
 	having count(*) > 1
 	order by 3)
 	union
@@ -3169,7 +3193,7 @@ create or replace view public.geocheck_duplicate_polygons as
 		qa_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_qa_polys
-	group by qa_guid, qa_localid, shape
+	group by qa_guid, qa_localid, shape, area
 	having count(*) > 1
 	order by 3)
 	union
@@ -3179,7 +3203,7 @@ create or replace view public.geocheck_duplicate_polygons as
 		victim_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_victim_polys
-	group by victim_guid, victim_localid, shape
+	group by victim_guid, victim_localid, shape, area
 	having count(*) > 1
 	order by 3)
 	union
@@ -3189,7 +3213,7 @@ create or replace view public.geocheck_duplicate_polygons as
 		gazetteer_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_gazetteer_polys
-	group by gazetteer_guid, gazetteer_localid, shape
+	group by gazetteer_guid, gazetteer_localid, shape, area
 	having count(*) > 1
 	order by 3)
 	union
@@ -3199,7 +3223,7 @@ create or replace view public.geocheck_duplicate_polygons as
 		location_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_location_polys
-	group by location_guid, location_localid, shape
+	group by location_guid, location_localid, shape, area
 	having count(*) > 1
 	order by 3)
 	union
@@ -3209,7 +3233,7 @@ create or replace view public.geocheck_duplicate_polygons as
 		place_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_place_polys
-	group by place_guid, place_localid, shape
+	group by place_guid, place_localid, shape, area
 	having count(*) > 1
 	order by 3)
 	union
@@ -3219,7 +3243,7 @@ create or replace view public.geocheck_duplicate_polygons as
 		localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_victim_assistance_polys
-	group by guid, localid, shape
+	group by guid, localid, shape, area
 	having count(*) > 1
 	order by 3)
 	union
@@ -3229,7 +3253,7 @@ create or replace view public.geocheck_duplicate_polygons as
 		localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_task_polys
-	group by guid, localid, shape
+	group by guid, localid, shape, area
 	having count(*) > 1
 	order by 3)
 	union
@@ -3239,7 +3263,7 @@ create or replace view public.geocheck_duplicate_polygons as
 		org_localid as localid,
 		string_agg(shape_id :: TEXT,', ') as dup_shape_ids
 	from geocheck_zint_organisation_polys
-	group by org_guid, org_localid, shape
+	group by org_guid, org_localid, shape, area
 	having count(*) > 1
 	order by 3)
 	order by 1, 3;

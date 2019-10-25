@@ -14,7 +14,7 @@ union all
 union all
 (select 'HIGH' as priority,'DUPLICATE POINTS IN POLYGONS' as Issue, (select count(*) from public.wb_geocheck_duplicate_polygon_points) as count, 'wb_geocheck_duplicate_polygon_points' as View )
 union all
-(select 'LOW' as priority,'POLYGONS WITH SAME IDS AND TYPES' as Issue, (select count(*) from public.wb_geocheck_duplicate_polygon_point_localid) as count, 'wb_geocheck_duplicate_polygon_point_localid' as View )
+(select 'LOW' as priority,'POLYGON POINTS WITH SAME IDS AND TYPES' as Issue, (select count(*) from public.wb_geocheck_duplicate_polygon_point_localid) as count, 'wb_geocheck_duplicate_polygon_point_localid' as View )
 union all
 (select 'MEDIUM' as priority,'DUPLICATE SINGLE POINTS' as Issue, (select count(*) from public.wb_geocheck_duplicate_points) as count, 'wb_geocheck_duplicate_points' as View )
 union all

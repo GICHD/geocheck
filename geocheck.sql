@@ -60,11 +60,11 @@ create or replace view public.geocheck_zint_hazard_pts as
 drop view if exists public.geocheck_zint_hazard_polys CASCADE;
 create or replace view public.geocheck_zint_hazard_polys as
 	select hazard_guid, hazard_localid, shape_id,
-		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
+		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'))))) as shape,
 		count(*) as pointcount,
-		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')')))))) as area
 	from (select hazard_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_hazard_pts where shapeenum = 'Polygon' 
 		order by hazard_guid, hazard_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -195,11 +195,11 @@ create or replace view public.geocheck_zint_hazreduc_pts as
 drop view if exists public.geocheck_zint_hazreduc_polys CASCADE;
 create or replace view public.geocheck_zint_hazreduc_polys as
 	select hazreduc_guid, hazreduc_localid, shape_id,
-		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
+		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'))))) as shape,
 		count(*) as pointcount,
-		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')')))))) as area
 	from (select hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_hazreduc_pts where shapeenum = 'Polygon' 
 		order by hazreduc_guid, hazreduc_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -330,11 +330,11 @@ create or replace view public.geocheck_zint_accident_pts as
 drop view if exists public.geocheck_zint_accident_polys CASCADE;
 create or replace view public.geocheck_zint_accident_polys as
 	select accident_guid, accident_localid, shape_id,
-		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
+		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'))))) as shape,
 		count(*) as pointcount,
-		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')')))))) as area
 	from (select accident_guid, accident_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_accident_pts where shapeenum = 'Polygon' 
 		order by accident_guid, accident_localid, shape_id, geospatialinfo_guid, pointno)	as values 
@@ -465,11 +465,11 @@ create or replace view public.geocheck_zint_mre_pts as
 drop view if exists public.geocheck_zint_mre_polys CASCADE;
 create or replace view public.geocheck_zint_mre_polys as
 	select mre_guid, mre_localid, shape_id,
-		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
+		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'))))) as shape,
 		count(*) as pointcount,
-		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')')))))) as area
 	from (select mre_guid, mre_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_mre_pts where shapeenum = 'Polygon' 
 		order by mre_guid, mre_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -599,11 +599,11 @@ create or replace view public.geocheck_zint_qa_pts as
 drop view if exists public.geocheck_zint_qa_polys CASCADE;
 create or replace view public.geocheck_zint_qa_polys as
 	select qa_guid, qa_localid, shape_id,
-		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
+		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'))))) as shape,
 		count(*) as pointcount,
-		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')')))))) as area
 	from (select qa_guid, qa_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_qa_pts where shapeenum = 'Polygon' 
 		order by qa_guid, qa_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -733,11 +733,11 @@ create or replace view public.geocheck_zint_victim_pts as
 drop view if exists public.geocheck_zint_victim_polys CASCADE;
 create or replace view public.geocheck_zint_victim_polys as
 	select victim_guid, victim_localid, shape_id,
-		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
+		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'))))) as shape,
 		count(*) as pointcount,
-		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')')))))) as area
 	from (select victim_guid, victim_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_victim_pts where shapeenum = 'Polygon' 
 		order by victim_guid, victim_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -867,11 +867,11 @@ create or replace view public.geocheck_zint_victim_assistance_pts as
 drop view if exists public.geocheck_zint_victim_assistance_polys CASCADE;
 create or replace view public.geocheck_zint_victim_assistance_polys as
 	select guid, localid, shape_id,
-		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
+		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'))))) as shape,
 		count(*) as pointcount,
-		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')')))))) as area
 	from (select guid, localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_victim_assistance_pts where shapeenum = 'Polygon' 
 		order by guid, localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -1002,11 +1002,11 @@ create or replace view public.geocheck_zint_task_pts as
 drop view if exists public.geocheck_zint_task_polys CASCADE;
 create or replace view public.geocheck_zint_task_polys as
 	select guid, localid, shape_id,
-		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
+		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'))))) as shape,
 		count(*) as pointcount,
-		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')')))))) as area
 	from (select guid, localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_task_pts where shapeenum = 'Polygon' 
 		order by guid, localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -1136,11 +1136,11 @@ create or replace view public.geocheck_zint_gazetteer_pts as
 drop view if exists public.geocheck_zint_gazetteer_polys CASCADE;
 create or replace view public.geocheck_zint_gazetteer_polys as
 	select gazetteer_guid, gazetteer_localid, shape_id,
-		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
+		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'))))) as shape,
 		count(*) as pointcount,
-		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')')))))) as area
 	from (select gazetteer_guid, gazetteer_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_gazetteer_pts where shapeenum = 'Polygon' 
 		order by gazetteer_guid, gazetteer_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -1270,11 +1270,11 @@ create or replace view public.geocheck_zint_location_pts as
 drop view if exists public.geocheck_zint_location_polys CASCADE;
 create or replace view public.geocheck_zint_location_polys as
 	select location_guid, location_localid, shape_id,
-		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
+		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'))))) as shape,
 		count(*) as pointcount,
-		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')')))))) as area
 	from (select location_guid, location_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_location_pts where shapeenum = 'Polygon' 
 		order by location_guid, location_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -1404,11 +1404,11 @@ create or replace view public.geocheck_zint_place_pts as
 drop view if exists public.geocheck_zint_place_polys CASCADE;
 create or replace view public.geocheck_zint_place_polys as
 	select place_guid, place_localid, shape_id,
-		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
+		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'))))) as shape,
 		count(*) as pointcount,
-		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')')))))) as area
 	from (select place_guid, place_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_place_pts where shapeenum = 'Polygon' 
 		order by place_guid, place_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -1538,11 +1538,11 @@ create or replace view public.geocheck_zint_organisation_pts as
 drop view if exists public.geocheck_zint_organisation_polys CASCADE;
 create or replace view public.geocheck_zint_organisation_polys as
 	select org_guid, org_localid, shape_id,
-		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'))))) as shape,
+		ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'))))) as shape,
 		count(*) as pointcount,
-		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')'), 4326), 
-		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),','),')')))))) as area
+		ST_Area(ST_MakePolygon(ST_AddPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')'), 4326), 
+		ST_StartPoint(ST_GeomFromText(concat('LINESTRING(', string_agg(concat(longitude::varchar, ' ', latitude::varchar),',' order by pointno),')')))))) as area
 	from (select org_guid, org_localid, shape_id, geospatialinfo_guid, pointno, longitude, latitude
 		from public.geocheck_zint_organisation_pts where shapeenum = 'Polygon' 
 		order by org_guid, org_localid, shape_id, geospatialinfo_guid, pointno) as values 
@@ -2926,7 +2926,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by hazard.hazard_guid, hazard.hazard_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by hazard.hazard_guid, hazard.hazard_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
@@ -2945,7 +2945,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by hazreduc.hazreduc_guid, hazreduc.hazreduc_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by hazreduc.hazreduc_guid, hazreduc.hazreduc_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
@@ -2964,7 +2964,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by accident.accident_guid, accident.accident_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by accident.accident_guid, accident.accident_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
@@ -2983,7 +2983,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by mre.mre_guid, mre.mre_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by mre.mre_guid, mre.mre_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
@@ -3002,7 +3002,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by qa.qa_guid, qa.qa_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by qa.qa_guid, qa.qa_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
@@ -3021,7 +3021,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by victim.victim_guid, victim.victim_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by victim.victim_guid, victim.victim_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
@@ -3040,7 +3040,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by gazetteer.gazetteer_guid, gazetteer.gazetteer_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by gazetteer.gazetteer_guid, gazetteer.gazetteer_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
@@ -3059,7 +3059,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by location.location_guid, location.location_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by location.location_guid, location.location_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
@@ -3078,7 +3078,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by place.place_guid, place.place_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by place.place_guid, place.place_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
@@ -3097,7 +3097,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by victim_assistance.guid, victim_assistance.localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by victim_assistance.guid, victim_assistance.localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
@@ -3116,7 +3116,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by task.guid, task.localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by task.guid, task.localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	union
@@ -3135,7 +3135,7 @@ create or replace view public.geocheck_duplicate_polygon_point_localid_trimmed a
 		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
 		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
 	where ime01.enumvalue = 'Polygon' or ime01.enumvalue = 'Polyline'
-	group by organisation.org_guid, organisation.org_localid, geospatialinfo.shape_id, trim(geopoint.pointlocal_id), ime02.enumvalue
+	group by organisation.org_guid, organisation.org_localid, geospatialinfo.shape_id, geospatialinfo.geospatialinfo_guid, trim(geopoint.pointlocal_id), ime02.enumvalue
 	having count(*) > 1
 	order by 3)
 	order by 1,3;

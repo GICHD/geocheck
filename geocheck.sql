@@ -3930,3 +3930,58 @@ create or replace view public.geocheck_adv_overlapping_polygons as
 			GROUP BY geocheck_zint_organisation_pts.org_localid HAVING (count(DISTINCT geocheck_zint_organisation_pts.geospatialinfo_guid) > 1) ORDER BY geocheck_zint_organisation_pts.	org_localid))) as tmp
 	where (st_collect::TEXT != st_union::TEXT) and overlap > 0.9
 	order by overlap  desc);
+	
+-------------------------------
+-- Begin duplicate ordnance section
+-------------------------------
+
+drop view if exists public.geocheck_duplicate_devices CASCADE; 
+create or replace view public.geocheck_duplicate_devices as
+	(select
+		'HAZARD DEVICE' as object_type,
+		hazard.hazard_localid as localid,
+		ime01.enumvalue as ordcategory_enum, 
+		ime02.enumvalue as ordsubcategory_enum,
+		ordnance.model,
+		hazdeviceinfo.qty,
+		count(*)
+	from hazdeviceinfo
+		inner join hazard on hazdeviceinfo.hazard_guid = hazard.hazard_guid
+		inner join ordnance on hazdeviceinfo.ordnance_guid = ordnance.ordnance_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = ordnance.ordcategoryenum_guid
+		left join imsmaenum ime02 on ime02.imsmaenum_guid = ordnance.ordsubcategoryenum_guid
+	group by hazdeviceinfo.hazard_guid, hazard.hazard_localid, ime01.enumvalue, ime02.enumvalue, ordnance.model, hazdeviceinfo.qty
+	having count(*) > 1)
+	union
+	(select
+		'HAZREDUC REDUCTION DEVICE' as object_type,
+		hazreduc.hazreduc_localid as localid,
+		ime01.enumvalue as ordcategory_enum, 
+		ime02.enumvalue as ordsubcategory_enum,
+		ordnance.model,
+		hazreducdeviceinfo.qty,
+		count(*)
+	from hazreducdeviceinfo
+		inner join hazreduc on hazreducdeviceinfo.hazreduc_guid = hazreduc.hazreduc_guid
+		inner join ordnance on hazreducdeviceinfo.ordnance_guid = ordnance.ordnance_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = ordnance.ordcategoryenum_guid
+		left join imsmaenum ime02 on ime02.imsmaenum_guid = ordnance.ordsubcategoryenum_guid
+	group by hazreducdeviceinfo.hazreduc_guid, hazreduc.hazreduc_localid, ime01.enumvalue, ime02.enumvalue, ordnance.model, hazreducdeviceinfo.qty
+	having count(*) > 1)
+	union
+	(select
+		'ACCIDENT DEVICE' as object_type,
+		accident.accident_localid as localid,
+		ime01.enumvalue as ordcategory_enum, 
+		ime02.enumvalue as ordsubcategory_enum,
+		ordnance.model,
+		0 as qty,
+		count(*)
+	from accdeviceinfo
+		inner join accident on accdeviceinfo.accident_guid = accident.accident_guid
+		inner join ordnance on accdeviceinfo.ordnance_guid = ordnance.ordnance_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = ordnance.ordcategoryenum_guid
+		left join imsmaenum ime02 on ime02.imsmaenum_guid = ordnance.ordsubcategoryenum_guid
+	group by accdeviceinfo.accident_guid, accident.accident_localid, ime01.enumvalue, ime02.enumvalue, ordnance.model
+	having count(*) > 1)
+	order by 1, 6 desc, 7 desc, 2;

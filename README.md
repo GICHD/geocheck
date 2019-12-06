@@ -21,7 +21,7 @@ The SQL script issue_count.sql can be used to count all issues detected by the g
 ## Requirements
 
 * IMSMA NG Version 6
-* A SQL Editor, for example pgAdmin III or Navicat.
+* A SQL Editor, for example pgAdmin or Navicat.
 
 ## Installation Instructions
 
@@ -56,6 +56,7 @@ There are 2 types of views:
 | [geocheck_duplicate_point_point_localid](#geocheck_duplicate_point_point_localid) | Geo Check | :heavy_exclamation_mark: | List of duplicate points based on localid NOT in a polygon |
 | [geocheck_duplicate_point_point_localid_trimmed](#geocheck_duplicate_point_point_localid_trimmed) | Geo Check | :heavy_exclamation_mark:| List of duplicate points based on trimmed localid NOT in a polygon |
 | [geocheck_duplicate_localids](#geocheck_duplicate_localids) | Data Check | :heavy_exclamation_mark:| List of duplicate objects based on localid |
+| [geocheck_duplicate_devices](#geocheck_duplicate_devices) | Data Check | :heavy_exclamation_mark:| List of duplicate devices|
 | [geocheck_adv_distance_polygon_points](#geocheck_adv_distance_polygon_points) | Geo Check | :warning:| List of polygons defined with a distance between 2 consecutive points higher than the value defined in the query (default is 5000 m) | 
 | [geocheck_adv_overlapping_polygons](#geocheck_adv_overlapping_polygons) | Geo Check | :warning:| List of multipart polygons whose polygons overlap more than a percentage defined in the query (default is 0.9%) | 
 | [geocheck_zint_**!TYPE!**_valid_polys](#geocheck_zint_type_valid_polys) | Information |:information_source: | List of valid polygons |
@@ -250,6 +251,22 @@ List of duplicate objects based on localid.
 | duplicate_localid | IMSMAng localid |
 | duplicate_quantity | Number of duplicates per localid |
 | duplicate_guids | List of the guids for each duplicate object|
+
+[View list](#views-available)
+
+### geocheck_duplicate_devices
+List of duplicate devices based on model and quantity.  
+**This view must be MOSTLY empty. When CDFs are used, there may be some genuine duplicate in this view.**
+
+| Field | Description|
+| --- | --- |
+| object_type | IMSMAng object type |
+| localid | IMSMAng localid |
+| ordcategory_enum | Device category |
+| ordsubcategory_enum | Device subcategory |
+| model |  Device model |
+| qty |  Device quantity |
+| count | Number of duplicates | 
 
 [View list](#views-available)
 

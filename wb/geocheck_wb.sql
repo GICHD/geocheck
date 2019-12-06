@@ -2789,3 +2789,67 @@ create or replace view public.wb_geocheck_adv_overlapping_polygons as
 			GROUP BY wb_geocheck_zint_victim_assistance_pts.localid HAVING (count(DISTINCT wb_geocheck_zint_victim_assistance_pts.geospatialinfo_guid) > 1) ORDER BY wb_geocheck_zint_victim_assistance_pts.	localid))) as tmp
 	where (st_collect::TEXT != st_union::TEXT) and overlap > 0.9
 	order by overlap  desc);
+	
+---------------------------------
+-- Begin duplicate device section
+---------------------------------
+
+drop view if exists public.wb_geocheck_duplicate_devices CASCADE; 
+create or replace view public.wb_geocheck_duplicate_devices as
+	(select
+		'HAZARD DEVICE' as object_type,
+		fieldreport.fieldreport_localid,
+		hazardinfoversion.hazard_localid as localid,
+		ime01.enumvalue as ordcategory_enum, 
+		ime02.enumvalue as ordsubcategory_enum,
+		ordnance.model,
+		hazdeviceinfoversion.qty,
+		count(*)
+	from hazdeviceinfoversion
+		inner join hazardinfoversion on hazdeviceinfoversion.hazardinfoversion_guid = hazardinfoversion.hazardinfoversion_guid
+		inner join fieldreport on fieldreport.fieldreport_guid = hazardinfoversion.fieldreport_guid
+		inner join ordnance on hazdeviceinfoversion.ordnance_guid = ordnance.ordnance_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = ordnance.ordcategoryenum_guid
+		left join imsmaenum ime02 on ime02.imsmaenum_guid = ordnance.ordsubcategoryenum_guid
+	where fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, hazardinfoversion.hazard_localid, ime01.enumvalue, ime02.enumvalue, ordnance.model, hazdeviceinfoversion.qty
+	having count(*) > 1)
+	union
+	(select
+		'HAZREDUC REDUCTION DEVICE' as object_type,
+		fieldreport.fieldreport_localid,
+		hazreducinfoversion.hazreduc_localid as localid,
+		ime01.enumvalue as ordcategory_enum, 
+		ime02.enumvalue as ordsubcategory_enum,
+		ordnance.model,
+		hazreducdeviceinfoversion.qty,
+		count(*)
+	from hazreducdeviceinfoversion
+		inner join hazreducinfoversion on hazreducdeviceinfoversion.hazreducinfoversion_guid = hazreducinfoversion.hazreducinfoversion_guid
+		inner join fieldreport on fieldreport.fieldreport_guid = hazreducinfoversion.fieldreport_guid
+		inner join ordnance on hazreducdeviceinfoversion.ordnance_guid = ordnance.ordnance_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = ordnance.ordcategoryenum_guid
+		left join imsmaenum ime02 on ime02.imsmaenum_guid = ordnance.ordsubcategoryenum_guid
+	where fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, hazreducinfoversion.hazreduc_localid, ime01.enumvalue, ime02.enumvalue, ordnance.model, hazreducdeviceinfoversion.qty
+	having count(*) > 1)
+	union
+	(select
+		'ACCIDENT DEVICE' as object_type,
+		fieldreport.fieldreport_localid,
+		accidentinfoversion.accident_localid as localid,
+		ime01.enumvalue as ordcategory_enum, 
+		ime02.enumvalue as ordsubcategory_enum,
+		ordnance.model,
+		0 as qty,
+		count(*)
+	from accdeviceinfoversion
+		inner join accidentinfoversion on accdeviceinfoversion.accidentinfoversion_guid = accidentinfoversion.accidentinfoversion_guid
+		inner join fieldreport on fieldreport.fieldreport_guid = accidentinfoversion.fieldreport_guid
+		inner join ordnance on accdeviceinfoversion.ordnance_guid = ordnance.ordnance_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = ordnance.ordcategoryenum_guid
+		left join imsmaenum ime02 on ime02.imsmaenum_guid = ordnance.ordsubcategoryenum_guid
+	where fieldreport.workbenchstatusenum_guid != '{BaseData-WorkbenchStatus-00000-00004}'
+	group by fieldreport.fieldreport_localid, fieldreport.fieldreport_guid, accidentinfoversion.accident_localid, ime01.enumvalue, ime02.enumvalue, ordnance.model
+	having count(*) > 1)
+	order by 1, 7 desc, 8 desc, 2;

@@ -6,7 +6,8 @@ drop view if exists public.wb_geocheck_accident_geo_valid_multipart_polys CASCAD
 drop view if exists public.wb_geocheck_accident_geo_valid_polys CASCADE;
 drop view if exists public.wb_geocheck_adv_overlapping_polygons CASCADE;
 drop view if exists public.wb_geocheck_adv_distance_polygon_points CASCADE;
-drop view if exists public.wb_geocheck_distance_polygon_points CASCADE; 
+drop view if exists public.wb_geocheck_distance_polygon_points CASCADE;
+drop view if exists public.wb_geocheck_duplicate_devices CASCADE; 
 drop view if exists public.wb_geocheck_duplicate_point_point_localid CASCADE; 
 drop view if exists public.wb_geocheck_duplicate_point_point_localid_trimmed CASCADE; 
 drop view if exists public.wb_geocheck_duplicate_points CASCADE; 

@@ -4,14 +4,14 @@
 The goecheck ToolBox is a set of tools to help clean up an IMSMAng database. It is important to run those tools before attempting to migrate an IMSMAng database to IMSMA Core.
 
 The tools are doing the following:
-  - Delete the last point of a polygon when it is a duplicate fo the first point [Global Delete Dup Last Points](#Global_Delete_Dup_Last_Points)
-  - Delete one of 2 duplicate consecutive points in a polygon [Global Delete Dup Consecutive Points](#global_delete_dup_consecutive_points)
-  - Delete one point part of a pair of duplicate single point in a record [Global Delete Dup Single Points](#global_delete_dup_single_points)
-  - Delete the last 2 points of a polygon when there are identical to the first 2 points [Global Delete Dup Last 2 Points with FirstSec](#global_delete_dup_last_2_points_with_firstcec)
-  - Search for duplicate CDF values [Global Duplicate CDF (Records)](#global_duplicate_cdf__records_)
-  - Search for duplicate CDF values [Global Duplicate CDF (Infoversions)](#global_duplicate_cdf__infoversions_)
-  - Provide queries to rename records with duplicate localid [Global Rename Dup Localids](#global_rename_dup_localids)
-  - Provide queries to analyze the enum values [Enum Value Review](#enum_value_review)
+  - Delete the last point of a polygon when it is a duplicate fo the first point [Global Delete Dup Last Points](#global-delete-dup-last-points)
+  - Delete one of 2 duplicate consecutive points in a polygon [Global Delete Dup Consecutive Points](#global-delete-dup-consecutive-points)
+  - Delete one point part of a pair of duplicate single point in a record [Global Delete Dup Single Points](#global-delete-dup-single-points)
+  - Delete the last 2 points of a polygon when there are identical to the first 2 points [Global Delete Dup Last 2 Points with FirstSec](#global-delete-dup-last-2-points-with-firstcec)
+  - Search for duplicate CDF values [Global Duplicate CDF (Records)](#global-duplicate-cdf-records)
+  - Search for duplicate CDF values [Global Duplicate CDF (Infoversions)](#global-duplicate-cdf-infoversions)
+  - Provide queries to rename records with duplicate localid [Global Rename Dup Localids](#global-rename-dup-localids)
+  - Provide queries to analyze the enum values [Enum Value Review](#enum-value-review)
 
 ## Who is this for?
 

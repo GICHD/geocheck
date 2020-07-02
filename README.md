@@ -65,7 +65,7 @@ There are 2 types of views:
 | [geocheck_zint_**!TYPE!**_all_object_polys](#geocheck_zint_type_all_object_polys) | Information|:information_source: | List of all polygons (single and multi)|
 | [geocheck_zint_**!TYPE!**_polys](#geocheck_zint_type_polys) | Information | :information_source:|  List of polygons created from IMSMAng points |
 | [geocheck_zint_**!TYPE!**_pts](#geocheck_zint_type_pts) | Information |:information_source: | List of points from IMSMAng |
-| [geocheck_zint_**!TYPE!**_infoversion_pts](#geocheck_zint_typeinfoversion_pts) | Information |:information_source: | List of points from IMSMAng infoversions |
+| [geocheck_zint_**!TYPE!**_infoversion_pts](#geocheck_zint_type_infoversion_pts) | Information |:information_source: | List of points from IMSMAng infoversions |
 
 **!TYPE!** can be accident, gazetteer, hazard, hazreduc, location, mre, organisation, place, qa, task, victim_assistance, victim.
 

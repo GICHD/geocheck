@@ -65,6 +65,7 @@ There are 2 types of views:
 | [geocheck_zint_**!TYPE!**_all_object_polys](#geocheck_zint_type_all_object_polys) | Information|:information_source: | List of all polygons (single and multi)|
 | [geocheck_zint_**!TYPE!**_polys](#geocheck_zint_type_polys) | Information | :information_source:|  List of polygons created from IMSMAng points |
 | [geocheck_zint_**!TYPE!**_pts](#geocheck_zint_type_pts) | Information |:information_source: | List of points from IMSMAng |
+| [geocheck_zint_**!TYPE!**infoversion_pts](#geocheck_zint_typeinfoversion_pts) | Information |:information_source: | List of points from IMSMAng infoversions |
 
 **!TYPE!** can be accident, gazetteer, hazard, hazreduc, location, mre, organisation, place, qa, task, victim_assistance, victim.
 
@@ -371,6 +372,47 @@ List of points from IMSMAng.
 | Field | Description|
 | --- | --- |
 | **!TYPE!**_guid | IMSMAng object GUID |
+| **!TYPE!**_localid | IMSMAng localid |
+| geospatialifo_guid| IMSMAng geospatialinfo GUID |
+| shapeenum | IMSMAng shape type |
+| shape_id | IMSMAng shapeid |
+| isactive | IMSMAng system field |
+| g_dataentrydate | Geopoint entry date in IMSMAng|
+| g_dataenterer | IMSMAng user who entered the geopoint|
+| poly_prop_enum_guid | IMSMAng Poly Property GUID |
+| geopoint_guid | IMSMAng Geopoint GUID|
+| pointlocal_id | IMSMAng Geopoint localid |
+| pointno | IMSMAng Geopoint number |
+| pointtypeenum | IMSMAng point type |
+| pointdescription | IMSMAng point description |
+| latitude | IMSMAng point latitude (WGS 1984)|
+| longitude | IMSMAng point latitude (WGS 1984)|
+| coordrefsys | Coordinate Reference System used by user when entering original coordinates|
+| fixedby_guid | IMSMAng enum GUID on how the coordinated were taken|
+| bearing| bearing information|
+| distance| distance information|
+| frompoint_guid| IMSMAng point GUID from which the distance and bearing were taken|
+| frompointinput | |
+| userinputformat | Input format used by user when entering original coordinates|
+| coordformat | Coordinate format used by user when entering original coordinates|
+| dataentrydate | Geopoint entry date in IMSMAng|
+| dataenterer | IMSMAng user who entered the geopoint|
+| elevation | Geopoint elevation information|
+| user_entered_x | x coordinate originally entered by user|
+| user_entered_y| y coordinate originally entered by user|
+| user_entered_mgrs| MGRS coordinate originally entered by user|
+| shape | Postgis geometry |
+
+[View list](#views-available)
+
+
+### geocheck_zint_**!TYPE!**infoversion_pts
+List of points from IMSMAng.  
+
+| Field | Description|
+| --- | --- |
+| **!TYPE!**_guid | IMSMAng object GUID |
+| **!TYPE!**infoversion_guid | IMSMAng infoversion GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | geospatialifo_guid| IMSMAng geospatialinfo GUID |
 | shapeenum | IMSMAng shape type |

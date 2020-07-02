@@ -1,5 +1,6 @@
--- delete from geopoint where geopoint_guid in (
-select * from geopoint where geopoint_guid in (
+-- delete from geopoint 	-- uncommment this line for delete, comment this line for listing
+select * from geopoint 		-- comment this line for delete, uncommment this line for listing
+where geopoint_guid in (
 	select geopoint_guid
 		from (
 			with min_point_values as(

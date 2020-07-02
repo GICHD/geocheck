@@ -1,6 +1,8 @@
 ---- Delete duplicate single points with same types (1 against 2)
---delete from geopoint 
-	where geopoint_guid in (
+
+-- delete from geopoint 	-- uncommment this line for delete, comment this line for listing
+select * from geopoint 		-- comment this line for delete, uncommment this line for listing
+where geopoint_guid in (
 	select split_part(guids,'|',1) from
 		(
 		-- To get list, run query below
@@ -10,8 +12,10 @@
 	);
 
 ---- Delete duplicate single points with same types (2 against 3)
---delete from geopoint 
-	where geopoint_guid in (
+
+-- delete from geopoint 	-- uncommment this line for delete, comment this line for listing
+select * from geopoint 		-- comment this line for delete, uncommment this line for listing
+where geopoint_guid in (
 	select split_part(guids,'|',2) from
 		(
 		-- To get list, run query below
@@ -21,8 +25,10 @@
 	);
 
 ---- Delete duplicate single points with same types (3 against 4)
---delete from geopoint 
-	where geopoint_guid in (
+
+-- delete from geopoint 	-- uncommment this line for delete, comment this line for listing
+select * from geopoint 		-- comment this line for delete, uncommment this line for listing
+where geopoint_guid in (
 	select split_part(guids,'|',3) from
 		(
 		-- To get list, run query below

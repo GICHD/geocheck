@@ -2,8 +2,8 @@
 -- Hazard ---
 -------------
 
--- delete from geopoint 	-- uncommment this line for delete
-select * from geopoint 		-- comment this line for delete
+-- delete from geopoint 	-- uncommment this line for delete, comment this line for listing
+select * from geopoint 		-- comment this line for delete, uncommment this line for listing
 where geopoint_guid in (
 (select distinct onebutlast_point_guid
 from (
@@ -198,8 +198,8 @@ select
 -- Hazard Reduction---
 ----------------------
 
--- delete from geopoint 	-- uncommment this line for delete
-select * from geopoint 		-- comment this line for delete
+-- delete from geopoint 	-- uncommment this line for delete, comment this line for listing
+select * from geopoint 		-- comment this line for delete, uncommment this line for listing
 where geopoint_guid in (
 (select distinct onebutlast_point_guid
 from (

@@ -1,6 +1,8 @@
 -- RECORDS
--- delete from geopoint where geopoint_guid in (
-select * from geopoint where geopoint_guid in (
+
+-- delete from geopoint 	-- uncommment this line for delete, comment this line for listing
+select * from geopoint 		-- comment this line for delete, uncommment this line for listing
+where geopoint_guid in (
 	select split_part(guids,'|',1) from
 		(
 		-- To get list, run query below
@@ -10,8 +12,10 @@ select * from geopoint where geopoint_guid in (
 	);
 	
 -- INFOVERSIONS
--- delete from geopoint where geopoint_guid in (
-select * from geopoint where geopoint_guid in (
+
+-- delete from geopoint 	-- uncommment this line for delete, comment this line for listing
+select * from geopoint 		-- comment this line for delete, uncommment this line for listing
+where geopoint_guid in (
 	select split_part(guids,'|',1) from
 		(
 		-- To get list, run query below

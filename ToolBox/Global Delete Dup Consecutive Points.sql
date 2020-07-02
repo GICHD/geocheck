@@ -1,6 +1,6 @@
----- Delete duplicate consecutive points
-delete from geopoint 
-	where geopoint_guid in (
+-- RECORDS
+-- delete from geopoint where geopoint_guid in (
+select * from geopoint where geopoint_guid in (
 	select split_part(guids,'|',1) from
 		(
 		-- To get list, run query below
@@ -9,9 +9,9 @@ delete from geopoint
 		) t
 	);
 	
----- Delete duplicate consecutive points (infoversion)
-delete from geopoint 
-	where geopoint_guid in (
+-- INFOVERSIONS
+-- delete from geopoint where geopoint_guid in (
+select * from geopoint where geopoint_guid in (
 	select split_part(guids,'|',1) from
 		(
 		-- To get list, run query below

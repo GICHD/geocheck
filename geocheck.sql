@@ -3985,3 +3985,479 @@ create or replace view public.geocheck_duplicate_devices as
 	group by accdeviceinfo.accident_guid, accident.accident_localid, ime01.enumvalue, ime02.enumvalue, ordnance.model
 	having count(*) > 1)
 	order by 1, 6 desc, 7 desc, 2;
+
+-------------------------------
+-- Begin infoversion section
+-------------------------------
+
+drop view if exists public.geocheck_zint_hazardinfoversion_pts CASCADE; 
+create or replace view public.geocheck_zint_hazardinfoversion_pts as
+
+	select
+		hazardinfoversion.hazard_guid,
+		hazardinfoversion.hazardinfoversion_guid,
+		hazardinfoversion.hazard_localid,
+		hazardinfoversion_has_geospatialinfo.geospatialinfo_guid,
+		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
+		geospatialinfo.shape_id,
+		geospatialinfo.isactive,
+		geospatialinfo.dataentrydate as g_dataentrydate,
+		geospatialinfo.dataenterer as g_dataenterer,
+		geospatialinfo.poly_prop_enum_guid,
+		geopoint.geopoint_guid,
+		-- geopoint.geospatialinfo_guid,
+		geopoint.pointlocal_id,
+		geopoint.pointno,
+		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
+		geopoint.pointdescription,
+		geopoint.latitude,
+		geopoint.longitude,
+		geopoint.coordrefsys,
+		geopoint.fixedby_guid,
+		geopoint.bearing,
+		geopoint.distance,
+		geopoint.frompoint_guid,
+		geopoint.frompointinput,
+		geopoint.userinputformat,
+		geopoint.coordformat,
+		geopoint.dataentrydate,
+		geopoint.dataenterer,
+		geopoint.elevation,
+		geopoint.user_entered_x,
+		geopoint.user_entered_y,
+		geopoint.user_entered_mgrs,
+		ST_SetSRID(ST_MakePoint(geopoint.longitude, geopoint.latitude),4326) as shape -- create shape column
+	from geopoint
+		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join hazardinfoversion_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = hazardinfoversion_has_geospatialinfo.geospatialinfo_guid
+		inner join hazardinfoversion on hazardinfoversion_has_geospatialinfo.hazardinfoversion_guid = hazardinfoversion.hazardinfoversion_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
+	order by geopoint.geospatialinfo_guid, geopoint.pointno;
+   
+drop view if exists public.geocheck_zint_hazreducinfoversion_pts CASCADE; 
+create or replace view public.geocheck_zint_hazreducinfoversion_pts as
+
+	select
+		hazreducinfoversion.hazreduc_guid,
+		hazreducinfoversion.hazreducinfoversion_guid,
+		hazreducinfoversion.hazreduc_localid,
+		hazreducinfoversion_has_geospatialinfo.geospatialinfo_guid,
+		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
+		geospatialinfo.shape_id,
+		geospatialinfo.isactive,
+		geospatialinfo.dataentrydate as g_dataentrydate,
+		geospatialinfo.dataenterer as g_dataenterer,
+		geospatialinfo.poly_prop_enum_guid,
+		geopoint.geopoint_guid,
+		-- geopoint.geospatialinfo_guid,
+		geopoint.pointlocal_id,
+		geopoint.pointno,
+		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
+		geopoint.pointdescription,
+		geopoint.latitude,
+		geopoint.longitude,
+		geopoint.coordrefsys,
+		geopoint.fixedby_guid,
+		geopoint.bearing,
+		geopoint.distance,
+		geopoint.frompoint_guid,
+		geopoint.frompointinput,
+		geopoint.userinputformat,
+		geopoint.coordformat,
+		geopoint.dataentrydate,
+		geopoint.dataenterer,
+		geopoint.elevation,
+		geopoint.user_entered_x,
+		geopoint.user_entered_y,
+		geopoint.user_entered_mgrs,
+		ST_SetSRID(ST_MakePoint(geopoint.longitude, geopoint.latitude),4326) as shape -- create shape column
+	from geopoint
+		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join hazreducinfoversion_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = hazreducinfoversion_has_geospatialinfo.geospatialinfo_guid
+		inner join hazreducinfoversion on hazreducinfoversion_has_geospatialinfo.hazreducinfoversion_guid = hazreducinfoversion.hazreducinfoversion_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
+	order by geopoint.geospatialinfo_guid, geopoint.pointno;
+
+drop view if exists public.geocheck_zint_accidentinfoversion_pts CASCADE; 
+create or replace view public.geocheck_zint_accidentinfoversion_pts as
+
+	select
+		accidentinfoversion.accident_guid,
+		accidentinfoversion.accidentinfoversion_guid,
+		accidentinfoversion.accident_localid,
+		accidentinfoversion_has_geospatialinfo.geospatialinfo_guid,
+		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
+		geospatialinfo.shape_id,
+		geospatialinfo.isactive,
+		geospatialinfo.dataentrydate as g_dataentrydate,
+		geospatialinfo.dataenterer as g_dataenterer,
+		geospatialinfo.poly_prop_enum_guid,
+		geopoint.geopoint_guid,
+		-- geopoint.geospatialinfo_guid,
+		geopoint.pointlocal_id,
+		geopoint.pointno,
+		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
+		geopoint.pointdescription,
+		geopoint.latitude,
+		geopoint.longitude,
+		geopoint.coordrefsys,
+		geopoint.fixedby_guid,
+		geopoint.bearing,
+		geopoint.distance,
+		geopoint.frompoint_guid,
+		geopoint.frompointinput,
+		geopoint.userinputformat,
+		geopoint.coordformat,
+		geopoint.dataentrydate,
+		geopoint.dataenterer,
+		geopoint.elevation,
+		geopoint.user_entered_x,
+		geopoint.user_entered_y,
+		geopoint.user_entered_mgrs,
+		ST_SetSRID(ST_MakePoint(geopoint.longitude, geopoint.latitude),4326) as shape -- create shape column
+	from geopoint
+		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join accidentinfoversion_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = accidentinfoversion_has_geospatialinfo.geospatialinfo_guid
+		inner join accidentinfoversion on accidentinfoversion_has_geospatialinfo.accidentinfoversion_guid = accidentinfoversion.accidentinfoversion_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
+	order by geopoint.geospatialinfo_guid, geopoint.pointno;
+	
+drop view if exists public.geocheck_zint_mreinfoversion_pts CASCADE; 
+create or replace view public.geocheck_zint_mreinfoversion_pts as
+
+	select
+		mreinfoversion.mre_guid,
+		mreinfoversion.mreinfoversion_guid,
+		mreinfoversion.mre_localid,
+		mreinfoversion_has_geospatialinfo.geospatialinfo_guid,
+		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
+		geospatialinfo.shape_id,
+		geospatialinfo.isactive,
+		geospatialinfo.dataentrydate as g_dataentrydate,
+		geospatialinfo.dataenterer as g_dataenterer,
+		geospatialinfo.poly_prop_enum_guid,
+		geopoint.geopoint_guid,
+		-- geopoint.geospatialinfo_guid,
+		geopoint.pointlocal_id,
+		geopoint.pointno,
+		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
+		geopoint.pointdescription,
+		geopoint.latitude,
+		geopoint.longitude,
+		geopoint.coordrefsys,
+		geopoint.fixedby_guid,
+		geopoint.bearing,
+		geopoint.distance,
+		geopoint.frompoint_guid,
+		geopoint.frompointinput,
+		geopoint.userinputformat,
+		geopoint.coordformat,
+		geopoint.dataentrydate,
+		geopoint.dataenterer,
+		geopoint.elevation,
+		geopoint.user_entered_x,
+		geopoint.user_entered_y,
+		geopoint.user_entered_mgrs,
+		ST_SetSRID(ST_MakePoint(geopoint.longitude, geopoint.latitude),4326) as shape -- create shape column
+	from geopoint
+		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join mreinfoversion_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = mreinfoversion_has_geospatialinfo.geospatialinfo_guid
+		inner join mreinfoversion on mreinfoversion_has_geospatialinfo.mreinfoversion_guid = mreinfoversion.mreinfoversion_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
+	order by geopoint.geospatialinfo_guid, geopoint.pointno;
+
+drop view if exists public.geocheck_zint_qainfoversion_pts CASCADE; 
+create or replace view public.geocheck_zint_qainfoversion_pts as
+
+	select
+		qainfoversion.qa_guid,
+		qainfoversion.qainfoversion_guid,
+		qainfoversion.qa_localid,
+		qainfoversion_has_geospatialinfo.geospatialinfo_guid,
+		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
+		geospatialinfo.shape_id,
+		geospatialinfo.isactive,
+		geospatialinfo.dataentrydate as g_dataentrydate,
+		geospatialinfo.dataenterer as g_dataenterer,
+		geospatialinfo.poly_prop_enum_guid,
+		geopoint.geopoint_guid,
+		-- geopoint.geospatialinfo_guid,
+		geopoint.pointlocal_id,
+		geopoint.pointno,
+		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
+		geopoint.pointdescription,
+		geopoint.latitude,
+		geopoint.longitude,
+		geopoint.coordrefsys,
+		geopoint.fixedby_guid,
+		geopoint.bearing,
+		geopoint.distance,
+		geopoint.frompoint_guid,
+		geopoint.frompointinput,
+		geopoint.userinputformat,
+		geopoint.coordformat,
+		geopoint.dataentrydate,
+		geopoint.dataenterer,
+		geopoint.elevation,
+		geopoint.user_entered_x,
+		geopoint.user_entered_y,
+		geopoint.user_entered_mgrs,
+		ST_SetSRID(ST_MakePoint(geopoint.longitude, geopoint.latitude),4326) as shape -- create shape column
+	from geopoint
+		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join qainfoversion_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = qainfoversion_has_geospatialinfo.geospatialinfo_guid
+		inner join qainfoversion on qainfoversion_has_geospatialinfo.qainfoversion_guid = qainfoversion.qainfoversion_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
+	order by geopoint.geospatialinfo_guid, geopoint.pointno;
+
+drop view if exists public.geocheck_zint_victiminfoversion_pts CASCADE; 
+create or replace view public.geocheck_zint_victiminfoversion_pts as
+
+	select
+		victiminfoversion.victim_guid,
+		victiminfoversion.victiminfoversion_guid,
+		victiminfoversion.victim_localid,
+		victiminfoversion_has_geospatialinfo.geospatialinfo_guid,
+		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
+		geospatialinfo.shape_id,
+		geospatialinfo.isactive,
+		geospatialinfo.dataentrydate as g_dataentrydate,
+		geospatialinfo.dataenterer as g_dataenterer,
+		geospatialinfo.poly_prop_enum_guid,
+		geopoint.geopoint_guid,
+		-- geopoint.geospatialinfo_guid,
+		geopoint.pointlocal_id,
+		geopoint.pointno,
+		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
+		geopoint.pointdescription,
+		geopoint.latitude,
+		geopoint.longitude,
+		geopoint.coordrefsys,
+		geopoint.fixedby_guid,
+		geopoint.bearing,
+		geopoint.distance,
+		geopoint.frompoint_guid,
+		geopoint.frompointinput,
+		geopoint.userinputformat,
+		geopoint.coordformat,
+		geopoint.dataentrydate,
+		geopoint.dataenterer,
+		geopoint.elevation,
+		geopoint.user_entered_x,
+		geopoint.user_entered_y,
+		geopoint.user_entered_mgrs,
+		ST_SetSRID(ST_MakePoint(geopoint.longitude, geopoint.latitude),4326) as shape -- create shape column
+	from geopoint
+		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join victiminfoversion_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = victiminfoversion_has_geospatialinfo.geospatialinfo_guid
+		inner join victiminfoversion on victiminfoversion_has_geospatialinfo.victiminfoversion_guid = victiminfoversion.victiminfoversion_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
+	order by geopoint.geospatialinfo_guid, geopoint.pointno;
+
+drop view if exists public.geocheck_zint_victim_assistance_version_pts CASCADE; 
+create or replace view public.geocheck_zint_victim_assistance_version_pts as
+
+	select
+		victim_assistance_version.victim_assistance_guid,
+		victim_assistance_version.guid,
+		victim_assistance_version.localid,
+		victim_assistance_version_has_geospatialinfo.geospatialinfo_guid,
+		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
+		geospatialinfo.shape_id,
+		geospatialinfo.isactive,
+		geospatialinfo.dataentrydate as g_dataentrydate,
+		geospatialinfo.dataenterer as g_dataenterer,
+		geospatialinfo.poly_prop_enum_guid,
+		geopoint.geopoint_guid,
+		-- geopoint.geospatialinfo_guid,
+		geopoint.pointlocal_id,
+		geopoint.pointno,
+		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
+		geopoint.pointdescription,
+		geopoint.latitude,
+		geopoint.longitude,
+		geopoint.coordrefsys,
+		geopoint.fixedby_guid,
+		geopoint.bearing,
+		geopoint.distance,
+		geopoint.frompoint_guid,
+		geopoint.frompointinput,
+		geopoint.userinputformat,
+		geopoint.coordformat,
+		geopoint.dataentrydate,
+		geopoint.dataenterer,
+		geopoint.elevation,
+		geopoint.user_entered_x,
+		geopoint.user_entered_y,
+		geopoint.user_entered_mgrs,
+		ST_SetSRID(ST_MakePoint(geopoint.longitude, geopoint.latitude),4326) as shape -- create shape column
+	from geopoint
+		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join victim_assistance_version_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = victim_assistance_version_has_geospatialinfo.geospatialinfo_guid
+		inner join victim_assistance_version on victim_assistance_version_has_geospatialinfo.victim_assistance_version_guid = victim_assistance_version.guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
+	order by geopoint.geospatialinfo_guid, geopoint.pointno;
+	
+drop view if exists public.geocheck_zint_locationinfoversion_pts CASCADE; 
+create or replace view public.geocheck_zint_locationinfoversion_pts as
+
+	select
+		locationinfoversion.location_guid,
+		locationinfoversion.locationinfoversion_guid,
+		locationinfoversion.location_localid,
+		locationinfoversion_has_geospatialinfo.geospatialinfo_guid,
+		ime01.enumvalue as shapeenum, -- geospatialinfo.shapeenum
+		geospatialinfo.shape_id,
+		geospatialinfo.isactive,
+		geospatialinfo.dataentrydate as g_dataentrydate,
+		geospatialinfo.dataenterer as g_dataenterer,
+		geospatialinfo.poly_prop_enum_guid,
+		geopoint.geopoint_guid,
+		-- geopoint.geospatialinfo_guid,
+		geopoint.pointlocal_id,
+		geopoint.pointno,
+		ime02.enumvalue as pointtypeenum, -- geopoint.pointtypeenum_guid
+		geopoint.pointdescription,
+		geopoint.latitude,
+		geopoint.longitude,
+		geopoint.coordrefsys,
+		geopoint.fixedby_guid,
+		geopoint.bearing,
+		geopoint.distance,
+		geopoint.frompoint_guid,
+		geopoint.frompointinput,
+		geopoint.userinputformat,
+		geopoint.coordformat,
+		geopoint.dataentrydate,
+		geopoint.dataenterer,
+		geopoint.elevation,
+		geopoint.user_entered_x,
+		geopoint.user_entered_y,
+		geopoint.user_entered_mgrs,
+		ST_SetSRID(ST_MakePoint(geopoint.longitude, geopoint.latitude),4326) as shape -- create shape column
+	from geopoint
+		inner join geospatialinfo on geopoint.geospatialinfo_guid = geospatialinfo.geospatialinfo_guid
+		inner join locationinfoversion_has_geospatialinfo on geospatialinfo.geospatialinfo_guid = locationinfoversion_has_geospatialinfo.geospatialinfo_guid
+		inner join locationinfoversion on locationinfoversion_has_geospatialinfo.locationinfoversion_guid = locationinfoversion.locationinfoversion_guid
+		left join imsmaenum ime01 on ime01.imsmaenum_guid = geospatialinfo.shapeenum_guid
+		left join imsmaenum ime02 on ime02.imsmaenum_guid = geopoint.pointtypeenum_guid
+	order by geopoint.geospatialinfo_guid, geopoint.pointno;
+
+-------------------------------
+-- Begin duplicate points in polygon section (infoversion)
+-------------------------------
+
+drop view if exists public.geocheck_infoversion_duplicate_polygon_points CASCADE; 
+create or replace view public.geocheck_infoversion_duplicate_polygon_points as
+	(select
+		'HAZARD' as object_type,
+		hazardinfoversion_guid as guid,
+		hazard_localid as localid,
+		shape_id,
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
+	from geocheck_zint_hazardinfoversion_pts
+	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
+	group by hazardinfoversion_guid, hazard_localid, shape_id, geospatialinfo_guid, shape
+	having count(*) > 1
+	order by 3,4)
+	union
+	(	select
+		'HAZARD REDUCTION' as object_type,
+		hazreducinfoversion_guid as guid,
+		hazreduc_localid as localid,
+		shape_id,
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
+	from geocheck_zint_hazreducinfoversion_pts
+	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
+	group by hazreducinfoversion_guid, hazreduc_localid, shape_id, geospatialinfo_guid, shape
+	having count(*) > 1
+	order by 3,4)
+	union
+	(select
+		'ACCIDENT' as object_type,
+		accidentinfoversion_guid as guid,
+		accident_localid as localid,
+		shape_id,
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
+	from geocheck_zint_accidentinfoversion_pts
+	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
+	group by accidentinfoversion_guid, accident_localid, shape_id, geospatialinfo_guid, shape
+	having count(*) > 1
+	order by 3,4)
+	union
+	(select
+		'MRE' as object_type,
+		mreinfoversion_guid as guid,
+		mre_localid as localid,
+		shape_id,
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
+	from geocheck_zint_mreinfoversion_pts
+	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
+	group by mreinfoversion_guid, mre_localid, shape_id, geospatialinfo_guid, shape
+	having count(*) > 1
+	order by 3,4)
+	union
+	(select
+		'QA' as object_type,
+		qainfoversion_guid as guid,
+		qa_localid as localid,
+		shape_id,
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
+	from geocheck_zint_qainfoversion_pts
+	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
+	group by qainfoversion_guid, qa_localid, shape_id, geospatialinfo_guid, shape
+	having count(*) > 1
+	order by 3,4)
+	union
+	(select
+		'VICTIM' as object_type,
+		victiminfoversion_guid as guid,
+		victim_localid as localid,
+		shape_id,
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
+	from geocheck_zint_victiminfoversion_pts
+	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
+	group by victiminfoversion_guid, victim_localid, shape_id, geospatialinfo_guid, shape
+	having count(*) > 1
+	order by 3,4)
+	union
+	(select
+		'LOCATION' as object_type,
+		locationinfoversion_guid as guid,
+		location_localid as localid,
+		shape_id,
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
+	from geocheck_zint_locationinfoversion_pts
+	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
+	group by locationinfoversion_guid, location_localid, shape_id, geospatialinfo_guid, shape
+	having count(*) > 1
+	order by 3,4)
+	union
+	(select
+		'VICTIM ASSISTANCE' as object_type,
+		guid as guid,
+		localid as localid,
+		shape_id,
+		string_agg(geopoint_guid,'|' order by pointno desc) as guids,
+		string_agg(pointno :: TEXT,'|' order by pointno desc) as dup_point_numbers
+	from geocheck_zint_victim_assistance_version_pts
+	where shapeenum = 'Polygon' or shapeenum = 'Polyline'
+	group by guid, localid, shape_id, geospatialinfo_guid, shape
+	having count(*) > 1
+	order by 3,4)
+
+

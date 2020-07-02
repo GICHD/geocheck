@@ -412,7 +412,7 @@ List of points from IMSMAng.
 | Field | Description|
 | --- | --- |
 | **!TYPE!**_guid | IMSMAng object GUID |
-| **!TYPE!**infoversion_guid | IMSMAng infoversion GUID |
+| **!TYPE!**_infoversion_guid | IMSMAng infoversion GUID |
 | **!TYPE!**_localid | IMSMAng localid |
 | geospatialifo_guid| IMSMAng geospatialinfo GUID |
 | shapeenum | IMSMAng shape type |
